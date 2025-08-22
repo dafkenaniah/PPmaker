@@ -425,21 +425,203 @@ class FileUploadManager {
      * @returns {Promise<Object>} Update instructions
      */
     async generateUpdateInstructions(content, updateNotes) {
-        // For now, create simple update instructions based on user notes
-        // This avoids the AI service CORS issues
-        
+        try {
+            // Create optimized prompt for AI analysis
+            const aiPrompt = this.buildOptimizedUpdatePrompt(content, updateNotes);
+            
+            // Use AI service to generate enhanced content
+            if (window.aiService) {
+                const aiResponse = await window.aiService.generateContent(aiPrompt);
+                return this.parseAIUpdateResponse(aiResponse, content, updateNotes);
+            }
+        } catch (error) {
+            console.warn('AI service failed, using fallback method:', error);
+        }
+
+        // Fallback: Create enhanced instructions without AI
+        return this.generateFallbackInstructions(content, updateNotes);
+    }
+
+    /**
+     * Build optimized prompt for AI content generation
+     * @param {Object} content - Extracted content
+     * @param {string} updateNotes - User update notes
+     * @returns {string} Optimized AI prompt
+     */
+    buildOptimizedUpdatePrompt(content, updateNotes) {
+        const slidesSummary = content.slides.map(slide => 
+            `Slide ${slide.slide_number}: "${slide.title}" - ${slide.content.slice(0, 100)}...`
+        ).join('\n');
+
+        return `
+TASK: Enhance PowerPoint presentation based on user request
+
+CURRENT PRESENTATION CONTEXT:
+Total Slides: ${content.slides.length}
+${slidesSummary}
+
+USER REQUEST: "${updateNotes}"
+
+INSTRUCTIONS:
+1. Analyze the existing presentation content and structure
+2. Based on the user's request, determine what enhancements are needed:
+   - Add new slides with relevant content
+   - Enhance existing slide content
+   - Improve slide titles and bullet points
+   - Maintain professional tone and structure
+
+3. Generate response in this EXACT JSON format:
+{
+  "action": "add_slides" | "enhance_existing" | "mixed",
+  "newSlides": [
+    {
+      "title": "Slide Title",
+      "content": [
+        "• Bullet point 1",
+        "• Bullet point 2", 
+        "• Bullet point 3"
+      ]
+    }
+  ],
+  "enhancedSlides": [
+    {
+      "slideNumber": 1,
+      "title": "Enhanced Title",
+      "content": [
+        "• Enhanced bullet point 1",
+        "• Enhanced bullet point 2"
+      ]
+    }
+  ]
+}
+
+4. Ensure all content is:
+   - Professional and business-appropriate
+   - Structured with clear bullet points
+   - Relevant to the presentation context
+   - Actionable and informative
+
+Generate comprehensive content that addresses the user's request while maintaining the presentation's coherence.
+`;
+    }
+
+    /**
+     * Parse AI response and format for presentation generation
+     * @param {string} aiResponse - AI generated response
+     * @param {Object} originalContent - Original presentation content
+     * @param {string} updateNotes - User update notes
+     * @returns {Object} Formatted update instructions
+     */
+    parseAIUpdateResponse(aiResponse, originalContent, updateNotes) {
+        try {
+            // Try to parse JSON response from AI
+            const aiData = JSON.parse(aiResponse);
+            
+            const instructions = {
+                slides: [...originalContent.slides], // Start with original slides
+                updateInstructions: updateNotes,
+                timestamp: new Date().toISOString(),
+                aiGenerated: true
+            };
+
+            // Add new slides if specified
+            if (aiData.newSlides && aiData.newSlides.length > 0) {
+                aiData.newSlides.forEach(newSlide => {
+                    instructions.slides.push({
+                        slide_number: instructions.slides.length + 1,
+                        title: newSlide.title,
+                        content: Array.isArray(newSlide.content) ? newSlide.content.join('\n') : newSlide.content
+                    });
+                });
+            }
+
+            // Enhance existing slides if specified
+            if (aiData.enhancedSlides && aiData.enhancedSlides.length > 0) {
+                aiData.enhancedSlides.forEach(enhanced => {
+                    const slideIndex = enhanced.slideNumber - 1;
+                    if (slideIndex >= 0 && slideIndex < instructions.slides.length) {
+                        instructions.slides[slideIndex].title = enhanced.title;
+                        instructions.slides[slideIndex].content = Array.isArray(enhanced.content) ? 
+                            enhanced.content.join('\n') : enhanced.content;
+                    }
+                });
+            }
+
+            return instructions;
+        } catch (error) {
+            console.warn('Failed to parse AI response, using fallback:', error);
+            return this.generateFallbackInstructions(originalContent, updateNotes);
+        }
+    }
+
+    /**
+     * Generate fallback instructions when AI is not available
+     * @param {Object} content - Extracted content
+     * @param {string} updateNotes - User update notes
+     * @returns {Object} Fallback update instructions
+     */
+    generateFallbackInstructions(content, updateNotes) {
+        // Create meaningful fallback content based on user notes
         const instructions = {
-            slides: content.slides.map((slide, index) => ({
-                slideNumber: slide.slide_number,
-                title: slide.title,
-                content: slide.content,
-                updateNotes: updateNotes // Add user's update notes to each slide
-            })),
+            slides: [...content.slides], // Keep original slides
             updateInstructions: updateNotes,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            aiGenerated: false
         };
 
+        // Add a new slide with user's request as content
+        instructions.slides.push({
+            slide_number: instructions.slides.length + 1,
+            title: this.generateSlideTitle(updateNotes),
+            content: this.generateSlideContent(updateNotes)
+        });
+
         return instructions;
+    }
+
+    /**
+     * Generate slide title from user notes
+     * @param {string} updateNotes - User update notes
+     * @returns {string} Generated slide title
+     */
+    generateSlideTitle(updateNotes) {
+        // Extract key phrases and create a professional title
+        const words = updateNotes.toLowerCase().split(' ');
+        const keyWords = words.filter(word => 
+            word.length > 3 && 
+            !['about', 'more', 'some', 'with', 'that', 'this', 'they', 'them', 'from', 'will', 'have'].includes(word)
+        );
+        
+        if (keyWords.length > 0) {
+            const title = keyWords.slice(0, 3).map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+            return title + (updateNotes.includes('?') ? '' : ' Overview');
+        }
+        
+        return 'Additional Information';
+    }
+
+    /**
+     * Generate slide content from user notes
+     * @param {string} updateNotes - User update notes
+     * @returns {string} Generated slide content
+     */
+    generateSlideContent(updateNotes) {
+        // Split user notes into bullet points
+        const sentences = updateNotes.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        
+        if (sentences.length > 1) {
+            return sentences.map(sentence => `• ${sentence.trim()}`).join('\n');
+        } else {
+            // Create bullet points based on key concepts
+            const content = [
+                `• ${updateNotes.trim()}`,
+                '• Key considerations and implementation details',
+                '• Next steps and action items'
+            ];
+            return content.join('\n');
+        }
     }
 
     /**
