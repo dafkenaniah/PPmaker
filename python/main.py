@@ -65,9 +65,19 @@ def update_powerpoint():
             for i, slide_data in enumerate(update_instructions['slides']):
                 print(f"Creating slide {i+1}: {slide_data.get('title', 'No title')}")
                 
-                # Use title and content layout (layout 1)
-                title_content_layout = prs.slide_layouts[1]
-                slide = prs.slides.add_slide(title_content_layout)
+                # Use available layout - check what layouts exist
+                if len(prs.slide_layouts) > 1:
+                    # Use title and content layout if available
+                    layout = prs.slide_layouts[1]
+                elif len(prs.slide_layouts) > 0:
+                    # Use first available layout
+                    layout = prs.slide_layouts[0]
+                else:
+                    # Fallback - use blank layout
+                    layout = prs.slide_layouts[6] if len(prs.slide_layouts) > 6 else prs.slide_layouts[0]
+                
+                print(f"Using slide layout index: {prs.slide_layouts.index(layout)} out of {len(prs.slide_layouts)} available")
+                slide = prs.slides.add_slide(layout)
                 
                 # Set title
                 if 'title' in slide_data and slide.shapes.title:
