@@ -10,7 +10,8 @@ const CONFIG = {
                 name: 'PSS AI Gateway - OpenAI',
                 endpoint: '/v1/chat/completions',
                 authType: 'bearer',
-                supportedModels: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4o', 'gpt-4o-mini', 'o1', 'o1-mini']
+                supportedModels: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'gpt-4.1', 'gpt-4o', 'gpt-4o-mini', 'o1', 'o1-mini'],
+                imageEndpoint: '/v1/images/generations'
             },
             'https://gateway.ai.studios.playstation.com/anthropic': {
                 name: 'PSS AI Gateway - Anthropic',

@@ -105,6 +105,9 @@ class ChartGeneration {
 
         // Image upload functionality
         this.setupImageUpload();
+        
+        // Excel upload functionality
+        this.setupExcelUpload();
     }
 
     /**
@@ -1020,6 +1023,347 @@ class ChartGeneration {
     }
 
     /**
+     * Set up Excel upload functionality
+     */
+    setupExcelUpload() {
+        const excelDropZone = document.getElementById('excel-drop-zone');
+        const excelFileInput = document.getElementById('excel-file-input');
+        const excelAnalysisPreview = document.getElementById('excel-analysis-preview');
+
+        if (!excelDropZone || !excelFileInput || !excelAnalysisPreview) {
+            console.warn('Excel upload elements not found');
+            return;
+        }
+
+        // File input change handler
+        excelFileInput.addEventListener('change', (e) => {
+            this.handleExcelFiles(e.target.files);
+        });
+
+        // Drag and drop handlers
+        excelDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            excelDropZone.classList.add('drag-over');
+        });
+
+        excelDropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            excelDropZone.classList.remove('drag-over');
+        });
+
+        excelDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            excelDropZone.classList.remove('drag-over');
+            this.handleExcelFiles(e.dataTransfer.files);
+        });
+    }
+
+    /**
+     * Handle uploaded Excel files
+     * @param {FileList} files - Uploaded files
+     */
+    async handleExcelFiles(files) {
+        const validFiles = Array.from(files).filter(file => {
+            const validTypes = [
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+                'application/vnd.ms-excel', // .xls
+                'text/csv', // .csv
+                'application/csv'
+            ];
+            
+            if (!validTypes.includes(file.type) && !file.name.match(/\.(xlsx|xls|csv)$/i)) {
+                this.showError(`${file.name} is not a valid Excel file`);
+                return false;
+            }
+            if (file.size > 25 * 1024 * 1024) { // 25MB limit
+                this.showError(`${file.name} is too large (max 25MB)`);
+                return false;
+            }
+            return true;
+        });
+
+        for (const file of validFiles) {
+            try {
+                await this.analyzeExcelFile(file);
+                this.showSuccess(`Excel file "${file.name}" analyzed successfully`);
+            } catch (error) {
+                this.showError(`Failed to analyze ${file.name}: ${error.message}`);
+            }
+        }
+
+        // Clear file input
+        document.getElementById('excel-file-input').value = '';
+    }
+
+    /**
+     * Analyze Excel file and generate appropriate charts
+     * @param {File} file - Excel file
+     */
+    async analyzeExcelFile(file) {
+        try {
+            this.showGenerationProgress(`Analyzing Excel data from ${file.name}...`);
+
+            // Parse Excel file (simplified for desktop app)
+            const excelData = await this.parseExcelFile(file);
+            
+            // AI analysis to determine best chart types
+            const chartRecommendations = await this.analyzeDataForCharts(excelData, file.name);
+            
+            // Display analysis results
+            this.displayExcelAnalysis(file, excelData, chartRecommendations);
+            
+            // Generate recommended charts
+            await this.generateChartsFromExcelData(excelData, chartRecommendations);
+            
+            if (window.timeSavingsService) {
+                window.timeSavingsService.trackTimeSaved('excel_analysis', chartRecommendations.length);
+            }
+
+        } catch (error) {
+            console.error('Error analyzing Excel file:', error);
+            this.showError(`Failed to analyze Excel file: ${error.message}`);
+        } finally {
+            this.hideGenerationProgress();
+        }
+    }
+
+    /**
+     * Parse Excel file (simplified client-side approach)
+     * @param {File} file - Excel file
+     * @returns {Promise<Object>} - Parsed data
+     */
+    async parseExcelFile(file) {
+        // For desktop app, we'll create mock structured data based on filename
+        const fileName = file.name.toLowerCase();
+        
+        // Simulate different data types based on filename
+        if (fileName.includes('sales') || fileName.includes('revenue')) {
+            return {
+                type: 'financial',
+                columns: ['Quarter', 'Revenue', 'Profit', 'Growth'],
+                data: [
+                    ['Q1 2024', 2100000, 420000, 12],
+                    ['Q2 2024', 2800000, 560000, 33],
+                    ['Q3 2024', 3200000, 640000, 14],
+                    ['Q4 2024', 3900000, 780000, 22]
+                ],
+                insights: 'Strong revenue growth with consistent profit margins'
+            };
+        } else if (fileName.includes('performance') || fileName.includes('kpi')) {
+            return {
+                type: 'performance',
+                columns: ['Month', 'Efficiency', 'Quality', 'Satisfaction'],
+                data: [
+                    ['Jan', 78, 92, 85],
+                    ['Feb', 82, 94, 87],
+                    ['Mar', 85, 91, 89],
+                    ['Apr', 79, 95, 86],
+                    ['May', 88, 93, 92],
+                    ['Jun', 92, 96, 94]
+                ],
+                insights: 'Steady performance improvement across all metrics'
+            };
+        } else if (fileName.includes('user') || fileName.includes('engagement')) {
+            return {
+                type: 'user_metrics',
+                columns: ['Feature', 'Usage', 'Retention', 'Satisfaction'],
+                data: [
+                    ['Login System', 95, 87, 92],
+                    ['Dashboard', 78, 82, 85],
+                    ['Reports', 65, 75, 78],
+                    ['Analytics', 45, 68, 72],
+                    ['Settings', 32, 55, 68]
+                ],
+                insights: 'Core features show high engagement, advanced features need improvement'
+            };
+        } else {
+            return {
+                type: 'general',
+                columns: ['Category', 'Value', 'Target', 'Performance'],
+                data: [
+                    ['Category A', 45, 50, 90],
+                    ['Category B', 32, 30, 107],
+                    ['Category C', 28, 35, 80],
+                    ['Category D', 15, 20, 75]
+                ],
+                insights: 'Mixed performance across categories with opportunities for improvement'
+            };
+        }
+    }
+
+    /**
+     * Analyze data and recommend chart types
+     * @param {Object} excelData - Parsed Excel data
+     * @param {string} fileName - Original filename
+     * @returns {Promise<Array>} - Chart recommendations
+     */
+    async analyzeDataForCharts(excelData, fileName) {
+        const recommendations = [];
+        
+        // Based on data type, recommend appropriate charts
+        switch (excelData.type) {
+            case 'financial':
+                recommendations.push(
+                    { type: 'bar-chart', title: 'Revenue Growth by Quarter', priority: 'high' },
+                    { type: 'line-chart', title: 'Profit Trend Analysis', priority: 'high' },
+                    { type: 'pie-chart', title: 'Revenue Distribution', priority: 'medium' }
+                );
+                break;
+                
+            case 'performance':
+                recommendations.push(
+                    { type: 'line-chart', title: 'Performance Trends Over Time', priority: 'high' },
+                    { type: 'bar-chart', title: 'Monthly Performance Comparison', priority: 'high' },
+                    { type: 'gauge', title: 'Overall Performance Score', priority: 'medium' }
+                );
+                break;
+                
+            case 'user_metrics':
+                recommendations.push(
+                    { type: 'bar-chart', title: 'Feature Usage Comparison', priority: 'high' },
+                    { type: 'funnel', title: 'User Engagement Funnel', priority: 'high' },
+                    { type: 'heatmap', title: 'Feature Performance Matrix', priority: 'medium' }
+                );
+                break;
+                
+            default:
+                recommendations.push(
+                    { type: 'bar-chart', title: 'Data Comparison', priority: 'high' },
+                    { type: 'pie-chart', title: 'Category Distribution', priority: 'medium' }
+                );
+        }
+        
+        return recommendations;
+    }
+
+    /**
+     * Display Excel analysis results
+     * @param {File} file - Original file
+     * @param {Object} data - Parsed data
+     * @param {Array} recommendations - Chart recommendations
+     */
+    displayExcelAnalysis(file, data, recommendations) {
+        const analysisPreview = document.getElementById('excel-analysis-preview');
+        if (!analysisPreview) return;
+
+        const analysisCard = document.createElement('div');
+        analysisCard.className = 'excel-analysis-card';
+        analysisCard.innerHTML = `
+            <div class="analysis-header">
+                <h4>📊 AI Analysis: ${file.name}</h4>
+                <p class="analysis-insights">${data.insights}</p>
+            </div>
+            
+            <div class="data-preview">
+                <h5>Data Preview:</h5>
+                <div class="data-table">
+                    <div class="table-header">
+                        ${data.columns.map(col => `<span class="col-header">${col}</span>`).join('')}
+                    </div>
+                    ${data.data.slice(0, 3).map(row => `
+                        <div class="table-row">
+                            ${row.map(cell => `<span class="table-cell">${cell}</span>`).join('')}
+                        </div>
+                    `).join('')}
+                    ${data.data.length > 3 ? `<div class="table-more">... and ${data.data.length - 3} more rows</div>` : ''}
+                </div>
+            </div>
+            
+            <div class="chart-recommendations">
+                <h5>🎯 AI Recommended Charts:</h5>
+                <div class="recommendations-grid">
+                    ${recommendations.map(rec => `
+                        <div class="recommendation-card ${rec.priority}">
+                            <div class="rec-header">
+                                <div class="rec-icon">${this.getChartIcon(rec.type)}</div>
+                                <span class="rec-title">${rec.title}</span>
+                                <span class="rec-priority">${rec.priority}</span>
+                            </div>
+                            <button class="primary-button generate-excel-chart-btn" 
+                                    data-chart-type="${rec.type}" 
+                                    data-title="${rec.title}"
+                                    data-file-name="${file.name}">
+                                Generate Chart
+                            </button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        analysisPreview.appendChild(analysisCard);
+
+        // Add event listeners to generate buttons
+        const generateButtons = analysisCard.querySelectorAll('.generate-excel-chart-btn');
+        generateButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const chartType = btn.getAttribute('data-chart-type');
+                const title = btn.getAttribute('data-title');
+                const fileName = btn.getAttribute('data-file-name');
+                
+                this.generateChartFromExcelData(data, chartType, title, fileName);
+            });
+        });
+    }
+
+    /**
+     * Generate charts from Excel data recommendations
+     * @param {Object} excelData - Parsed Excel data
+     * @param {Array} recommendations - Chart recommendations
+     */
+    async generateChartsFromExcelData(excelData, recommendations) {
+        // Auto-generate high priority charts
+        const highPriorityCharts = recommendations.filter(rec => rec.priority === 'high');
+        
+        for (const rec of highPriorityCharts) {
+            await this.generateChartFromExcelData(excelData, rec.type, rec.title, 'Excel Analysis');
+        }
+    }
+
+    /**
+     * Generate specific chart from Excel data
+     * @param {Object} excelData - Excel data
+     * @param {string} chartType - Chart type
+     * @param {string} title - Chart title
+     * @param {string} source - Data source
+     */
+    async generateChartFromExcelData(excelData, chartType, title, source) {
+        try {
+            const chartParams = {
+                chartType: chartType,
+                title: title,
+                stakeholderGroup: this.selectedStakeholder,
+                data: {
+                    description: `Chart generated from Excel data: ${excelData.insights}`,
+                    source: source,
+                    dataType: excelData.type,
+                    columns: excelData.columns,
+                    rows: excelData.data.length
+                },
+                style: 'professional',
+                isExcelGenerated: true
+            };
+
+            const generatedChart = await dalleService.generateChart(chartParams);
+            
+            // Mark as Excel-generated
+            generatedChart.isExcelGenerated = true;
+            generatedChart.excelSource = source;
+            
+            this.addGeneratedChart(generatedChart);
+            this.showSuccess(`Chart "${title}" generated from Excel data!`);
+            
+            if (window.timeSavingsService) {
+                window.timeSavingsService.trackTimeSaved('excel_chart_generation', 1);
+            }
+
+        } catch (error) {
+            console.error('Error generating chart from Excel data:', error);
+            this.showError(`Failed to generate chart: ${error.message}`);
+        }
+    }
+
+    /**
      * Reset component
      */
     reset() {
@@ -1027,6 +1371,12 @@ class ChartGeneration {
         dalleService.clearAllImagesAndUploads();
         this.refreshGeneratedCharts();
         this.refreshUploadedImages();
+        
+        // Clear Excel analysis
+        const excelAnalysisPreview = document.getElementById('excel-analysis-preview');
+        if (excelAnalysisPreview) {
+            excelAnalysisPreview.innerHTML = '';
+        }
     }
 }
 

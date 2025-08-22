@@ -544,6 +544,40 @@ Example format:
                     </div>
                 </section>
 
+                <!-- Excel Data Upload Section -->
+                <section class="excel-upload-section">
+                    <div class="section-header">
+                        <h2>Upload Excel Data for AI Chart Analysis</h2>
+                        <p class="section-description">Upload Excel files and let AI analyze the best way to visualize your data</p>
+                    </div>
+                    
+                    <div class="excel-upload-container">
+                        <div class="file-drop-zone" id="excel-drop-zone">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            <p>Drop your Excel files here or click to browse</p>
+                            <p class="file-types">Supports: .xlsx, .xls, .csv (Max 25MB)</p>
+                            <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" multiple hidden>
+                            <button class="secondary-button" onclick="document.getElementById('excel-file-input').click()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Browse Excel Files
+                            </button>
+                        </div>
+                        
+                        <div id="excel-analysis-preview" class="excel-analysis-preview">
+                            <!-- Excel analysis and generated charts will appear here -->
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Image Upload Section -->
                 <section class="image-upload-section">
                     <div class="section-header">
