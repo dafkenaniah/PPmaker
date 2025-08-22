@@ -12,6 +12,12 @@ class FileUploadManager {
      * Initialize file upload manager
      */
     init() {
+        // Prevent double initialization
+        if (this.initialized) {
+            return;
+        }
+        this.initialized = true;
+        
         this.setupFileInput();
         this.setupDropZone();
         this.setupUpdateButton();
@@ -83,18 +89,41 @@ class FileUploadManager {
     setupUpdateButton() {
         const updateBtn = document.getElementById('process-update-btn');
         if (updateBtn) {
-            updateBtn.addEventListener('click', () => {
+            // Remove any existing listeners to prevent duplicates
+            updateBtn.removeEventListener('click', this.handleUpdateClick);
+            this.handleUpdateClick = this.debounce(() => {
                 this.processUpdate();
-            });
+            }, 1000); // 1 second debounce
+            updateBtn.addEventListener('click', this.handleUpdateClick);
         }
 
         // Monitor update notes input
         const updateInput = document.getElementById('update-notes-input');
         if (updateInput) {
-            updateInput.addEventListener('input', () => {
+            updateInput.removeEventListener('input', this.handleInputChange);
+            this.handleInputChange = () => {
                 this.updateButtonState();
-            });
+            };
+            updateInput.addEventListener('input', this.handleInputChange);
         }
+    }
+
+    /**
+     * Debounce function to prevent rapid consecutive calls
+     * @param {Function} func - Function to debounce
+     * @param {number} wait - Wait time in milliseconds
+     * @returns {Function} Debounced function
+     */
+    debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func.apply(this, args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
     }
 
     /**
@@ -308,7 +337,9 @@ class FileUploadManager {
      * Process update request
      */
     async processUpdate() {
+        // Strict duplicate prevention
         if (!this.uploadedFile || this.isProcessing) {
+            console.log('Update already in progress or no file uploaded');
             return;
         }
 
@@ -318,21 +349,32 @@ class FileUploadManager {
             return;
         }
 
+        // Set processing flag immediately and disable button
+        this.isProcessing = true;
+        const updateBtn = document.getElementById('process-update-btn');
+        if (updateBtn) {
+            updateBtn.disabled = true;
+            updateBtn.textContent = 'Processing...';
+        }
+
         try {
-            this.isProcessing = true;
             this.showUpdateProgress();
+            console.log('Starting update process...');
 
             // Extract PowerPoint content
             this.updateProgressStatus('Extracting presentation content...');
             const extractedContent = await this.extractPowerPointContent();
+            console.log('Content extracted successfully');
 
             // Generate update instructions
             this.updateProgressStatus('Generating update instructions...');
             const updateInstructions = await this.generateUpdateInstructions(extractedContent, updateNotes);
+            console.log('Update instructions generated');
 
             // Create updated PowerPoint
             this.updateProgressStatus('Creating updated presentation...');
             const updatedPresentation = await this.createUpdatedPresentation(updateInstructions);
+            console.log('Updated presentation created');
 
             // Show success and download
             this.showUpdateSuccess(updatedPresentation);
@@ -342,10 +384,15 @@ class FileUploadManager {
 
         } catch (error) {
             console.error('Update processing error:', error);
-            this.showError('Failed to process updates. Please try again.');
+            this.showError(`Failed to process updates: ${error.message}`);
         } finally {
             this.isProcessing = false;
+            if (updateBtn) {
+                updateBtn.disabled = false;
+                updateBtn.textContent = 'Update Presentation';
+            }
             this.hideUpdateProgress();
+            console.log('Update process completed');
         }
     }
 
