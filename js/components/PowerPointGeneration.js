@@ -266,60 +266,9 @@ class PowerPointGeneration {
                     });
                 }
             
-            // Build comprehensive presenter notes with context
-            let presenterNotes = '';
-            
-            // Add slide context
-            presenterNotes += `Slide ${index + 1} of ${this.currentOutline.slides.length}: ${slideData.title}\n\n`;
-            
-            // Add slide type context
-            if (slideData.slideType) {
-                presenterNotes += `Slide Type: ${slideData.slideType}\n\n`;
-            }
-            
-            // Add original presenter notes if available
-            if (slideData.presenterNotes) {
-                presenterNotes += `Notes: ${slideData.presenterNotes}\n\n`;
-            }
-            
-            // Add key points context
-            if (slideData.bullets && slideData.bullets.length > 0) {
-                presenterNotes += `Key Points to Cover:\n`;
-                slideData.bullets.forEach((bullet, i) => {
-                    presenterNotes += `${i + 1}. ${bullet}\n`;
-                });
-                presenterNotes += '\n';
-            }
-            
-            // Add timing guidance
-            const estimatedTime = Math.ceil(2 + (slideData.bullets?.length || slideData.content?.length || 1) * 0.5);
-            presenterNotes += `Estimated Presentation Time: ${estimatedTime} minutes\n\n`;
-            
-            // Add transition guidance
-            if (index < this.currentOutline.slides.length - 1) {
-                const nextSlide = this.currentOutline.slides[index + 1];
-                presenterNotes += `Transition to: "${nextSlide.title}"\n\n`;
-            }
-            
-            // Add overall presentation context
-            if (index === 0) {
-                presenterNotes += `Presentation Overview:\n`;
-                presenterNotes += `Total Slides: ${this.currentOutline.slides.length}\n`;
-                presenterNotes += `Estimated Duration: ${this.currentOutline.estimatedDuration || 'N/A'}\n`;
-                presenterNotes += `Theme: ${this.currentOutline.theme || 'Professional'}\n\n`;
-            }
-            
-            // Add slide-specific guidance
-            if (slideData.slideType === 'title') {
-                presenterNotes += `This is the opening slide. Take your time to engage the audience and set expectations.\n`;
-            } else if (slideData.slideType === 'conclusion') {
-                presenterNotes += `This is the conclusion slide. Summarize key takeaways and provide clear next steps.\n`;
-            } else {
-                presenterNotes += `Focus on clear delivery of each point. Allow time for questions if appropriate.\n`;
-            }
-            
-            // Add the comprehensive notes
-            slide.addNotes(presenterNotes.trim());
+            // Build comprehensive presenter notes with meeting context
+            const presenterNotes = this.buildEnhancedPresenterNotes(slideData, index, this.currentOutline);
+            slide.addNotes(presenterNotes);
         });
 
         // Step 4: Generate and download
@@ -982,6 +931,174 @@ class PowerPointGeneration {
      */
     destroy() {
         this.reset();
+    }
+
+    /**
+     * Build enhanced presenter notes with meeting context
+     * @param {Object} slideData - Slide data
+     * @param {number} index - Slide index
+     * @param {Object} outline - Full outline
+     * @returns {string} - Enhanced presenter notes
+     */
+    buildEnhancedPresenterNotes(slideData, index, outline) {
+        let notes = '';
+        
+        // Meeting Header Information (for intro slide)
+        if (index === 0) {
+            const currentDate = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            notes += `=== MEETING INFORMATION ===\n`;
+            notes += `Date: ${currentDate}\n`;
+            notes += `Meeting: ${outline.title || 'Presentation'}\n`;
+            notes += `Duration: ${outline.estimatedDuration || 'Variable'}\n`;
+            
+            // Get meeting context if available
+            const meetingContent = document.getElementById('meeting-content-input')?.value || 
+                                 document.getElementById('notes-input')?.value || '';
+            
+            if (meetingContent) {
+                // Extract attendees from meeting content
+                const attendees = this.extractAttendeesFromContent(meetingContent);
+                if (attendees.length > 0) {
+                    notes += `Attendees: ${attendees.join(', ')}\n`;
+                }
+                
+                // Extract key meeting themes
+                const themes = this.extractMeetingThemes(meetingContent);
+                if (themes.length > 0) {
+                    notes += `Key Topics: ${themes.join(', ')}\n`;
+                }
+            }
+            
+            notes += `\n=== AGENDA ===\n`;
+            outline.slides.forEach((slide, i) => {
+                notes += `${i + 1}. ${slide.title}\n`;
+            });
+            notes += '\n';
+        }
+        
+        // Slide-specific context
+        notes += `=== SLIDE ${index + 1}: ${slideData.title} ===\n\n`;
+        
+        if (slideData.presenterNotes) {
+            notes += `Speaker Notes: ${slideData.presenterNotes}\n\n`;
+        }
+        
+        // Key points with meeting context
+        if (slideData.bullets && slideData.bullets.length > 0) {
+            notes += `=== KEY POINTS ===\n`;
+            slideData.bullets.forEach((bullet, i) => {
+                notes += `${i + 1}. ${bullet}\n`;
+            });
+            notes += '\n';
+        }
+        
+        // Meeting context integration
+        const meetingContent = document.getElementById('meeting-content-input')?.value || 
+                             document.getElementById('notes-input')?.value || '';
+        
+        if (meetingContent && slideData.title) {
+            const relevantContext = this.extractRelevantMeetingContext(meetingContent, slideData.title);
+            if (relevantContext) {
+                notes += `=== MEETING CONTEXT ===\n`;
+                notes += `${relevantContext}\n\n`;
+            }
+        }
+        
+        // Timing and transition
+        const estimatedTime = Math.ceil(2 + (slideData.bullets?.length || slideData.content?.length || 1) * 0.5);
+        notes += `=== PRESENTATION GUIDANCE ===\n`;
+        notes += `Time: ${estimatedTime} minutes\n`;
+        
+        if (index < outline.slides.length - 1) {
+            const nextSlide = outline.slides[index + 1];
+            notes += `Next: "${nextSlide.title}"\n`;
+        }
+        
+        return notes.trim();
+    }
+
+    /**
+     * Extract attendees from meeting content
+     * @param {string} content - Meeting content
+     * @returns {Array} - List of attendees
+     */
+    extractAttendeesFromContent(content) {
+        const attendees = new Set();
+        
+        // Look for common name patterns in meeting transcripts
+        const namePatterns = [
+            /\[[\d:]+\]\s*([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)/g, // [10:00] John Smith
+            /^([A-Z][a-z]+(?:\s[A-Z][a-z]+)?):/gm, // John Smith:
+            /\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)?)\s+said/gi // John Smith said
+        ];
+        
+        namePatterns.forEach(pattern => {
+            let match;
+            while ((match = pattern.exec(content)) !== null) {
+                const name = match[1].trim();
+                if (name.length > 1 && name !== 'AM' && name !== 'PM') {
+                    attendees.add(name);
+                }
+            }
+        });
+        
+        return Array.from(attendees).slice(0, 8); // Limit to 8 attendees
+    }
+
+    /**
+     * Extract meeting themes from content
+     * @param {string} content - Meeting content
+     * @returns {Array} - List of themes
+     */
+    extractMeetingThemes(content) {
+        const themes = new Set();
+        const commonThemes = [
+            'roadmap', 'planning', 'budget', 'timeline', 'project', 'goals', 
+            'strategy', 'review', 'status', 'update', 'launch', 'development',
+            'marketing', 'qa', 'testing', 'release', 'features', 'performance'
+        ];
+        
+        const contentLower = content.toLowerCase();
+        commonThemes.forEach(theme => {
+            if (contentLower.includes(theme)) {
+                themes.add(theme.charAt(0).toUpperCase() + theme.slice(1));
+            }
+        });
+        
+        return Array.from(themes).slice(0, 5); // Limit to 5 themes
+    }
+
+    /**
+     * Extract relevant meeting context for specific slide
+     * @param {string} content - Meeting content
+     * @param {string} slideTitle - Slide title
+     * @returns {string} - Relevant context
+     */
+    extractRelevantMeetingContext(content, slideTitle) {
+        const titleWords = slideTitle.toLowerCase().split(' ');
+        const contentLines = content.split('\n');
+        const relevantLines = [];
+        
+        // Find lines that contain words from the slide title
+        contentLines.forEach(line => {
+            const lineLower = line.toLowerCase();
+            const hasRelevantContent = titleWords.some(word => 
+                word.length > 3 && lineLower.includes(word)
+            );
+            
+            if (hasRelevantContent && line.trim().length > 20) {
+                relevantLines.push(line.trim());
+            }
+        });
+        
+        // Return first few relevant lines
+        return relevantLines.slice(0, 3).join('\n');
     }
 }
 
