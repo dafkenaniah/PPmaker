@@ -532,13 +532,25 @@ class FileUploadManager {
 
     /**
      * Extract bullets from slide content
-     * @param {string} content - Slide content
+     * @param {string|Array|Object} content - Slide content
      * @returns {Array} Extracted bullets
      */
     extractBulletsFromContent(content) {
         if (!content) return [];
         
-        const lines = content.split('\n').filter(line => line.trim());
+        // Handle different content types
+        let contentText = '';
+        if (typeof content === 'string') {
+            contentText = content;
+        } else if (Array.isArray(content)) {
+            contentText = content.join('\n');
+        } else if (content && typeof content === 'object') {
+            contentText = JSON.stringify(content);
+        } else {
+            contentText = String(content || '');
+        }
+        
+        const lines = contentText.split('\n').filter(line => line.trim());
         return lines.map(line => line.replace(/^[•\-\*]\s*/, '').trim()).slice(0, 4);
     }
 

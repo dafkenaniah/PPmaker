@@ -107,9 +107,21 @@ class AIService {
      * @returns {string} - Optimized AI prompt
      */
     buildPresentationAnalysisPrompt(presentationContent, userInstructions) {
-        const slideSummary = presentationContent.slides.map(slide => 
-            `Slide ${slide.slide_number}: "${slide.title}"\nContent: ${slide.content.substring(0, 200)}...`
-        ).join('\n\n');
+        const slideSummary = presentationContent.slides.map(slide => {
+            // Handle different content types (string, array, object)
+            let contentText = '';
+            if (typeof slide.content === 'string') {
+                contentText = slide.content;
+            } else if (Array.isArray(slide.content)) {
+                contentText = slide.content.join(' ');
+            } else if (slide.content && typeof slide.content === 'object') {
+                contentText = JSON.stringify(slide.content);
+            } else {
+                contentText = slide.content || '';
+            }
+            
+            return `Slide ${slide.slide_number}: "${slide.title}"\nContent: ${contentText.substring(0, 200)}...`;
+        }).join('\n\n');
 
         return `
 TASK: Analyze existing PowerPoint presentation and generate an improved outline
