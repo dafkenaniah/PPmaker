@@ -847,7 +847,8 @@ Generate comprehensive content that addresses the user's request while maintaini
         if (!progressSection) return;
 
         const outlineDiv = document.createElement('div');
-        outlineDiv.className = 'outline-review';
+        outlineDiv.className = 'outline-review persistent-outline';
+        outlineDiv.id = 'persistent-outline-display'; // Add ID for persistence
         
         // Create outline display
         let slidesHtml = outline.slides.map(slide => `
@@ -863,15 +864,16 @@ Generate comprehensive content that addresses the user's request while maintaini
 
         outlineDiv.innerHTML = `
             <div class="outline-header">
-                <h3>📋 AI Generated Outline</h3>
+                <h3>📋 AI Generated Outline - Ready to Generate PowerPoint!</h3>
                 <p><strong>Title:</strong> ${outline.title}</p>
                 <p><strong>Slides:</strong> ${outline.totalSlides} | <strong>Duration:</strong> ${outline.estimatedDuration}</p>
+                <div class="outline-status">✅ Outline Ready - Click Generate to Create PowerPoint</div>
             </div>
             <div class="outline-content">
                 ${slidesHtml}
             </div>
             <div class="outline-actions">
-                <button id="generate-from-outline-btn" class="generate-button">
+                <button id="generate-from-outline-btn" class="generate-button" style="background: #28a745; color: white; padding: 12px 24px; font-size: 16px; font-weight: bold;">
                     🎯 Generate PowerPoint from This Outline
                 </button>
                 <button id="regenerate-outline-btn" class="secondary-button">
@@ -880,13 +882,25 @@ Generate comprehensive content that addresses the user's request while maintaini
             </div>
         `;
 
+        // Clear previous content and add the outline
         progressSection.innerHTML = '';
         progressSection.appendChild(outlineDiv);
+        
+        // Make sure the section is visible and stays visible
+        progressSection.classList.remove('hidden');
+        progressSection.style.display = 'block';
 
-        // Set up generate button
+        // Set up generate button with enhanced event handling
         const generateBtn = document.getElementById('generate-from-outline-btn');
         if (generateBtn) {
-            generateBtn.addEventListener('click', () => {
+            // Remove any existing listeners
+            const newGenerateBtn = generateBtn.cloneNode(true);
+            generateBtn.parentNode.replaceChild(newGenerateBtn, generateBtn);
+            
+            newGenerateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Generate PowerPoint button clicked');
                 this.generateFromOutline();
             });
         }
@@ -894,12 +908,20 @@ Generate comprehensive content that addresses the user's request while maintaini
         // Set up regenerate button
         const regenerateBtn = document.getElementById('regenerate-outline-btn');
         if (regenerateBtn) {
-            regenerateBtn.addEventListener('click', () => {
+            regenerateBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 this.processUpdate(); // Re-run the analysis
             });
         }
 
-        console.log('Outline displayed for review');
+        // Scroll to the outline to make it visible
+        setTimeout(() => {
+            outlineDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 500);
+
+        console.log('Outline displayed for review and should remain visible');
+        console.log('Generated outline stored:', this.generatedOutline);
     }
 
     /**
