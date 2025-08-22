@@ -89,22 +89,30 @@ class FileUploadManager {
     setupUpdateButton() {
         const updateBtn = document.getElementById('process-update-btn');
         if (updateBtn) {
+            // Create debounced function once if it doesn't exist
+            if (!this.debouncedProcessUpdate) {
+                this.debouncedProcessUpdate = this.debounce(() => {
+                    this.processUpdate();
+                }, 2000); // 2 second debounce for more safety
+            }
+            
             // Remove any existing listeners to prevent duplicates
-            updateBtn.removeEventListener('click', this.handleUpdateClick);
-            this.handleUpdateClick = this.debounce(() => {
-                this.processUpdate();
-            }, 1000); // 1 second debounce
-            updateBtn.addEventListener('click', this.handleUpdateClick);
+            updateBtn.removeEventListener('click', this.debouncedProcessUpdate);
+            updateBtn.addEventListener('click', this.debouncedProcessUpdate);
         }
 
         // Monitor update notes input
         const updateInput = document.getElementById('update-notes-input');
         if (updateInput) {
-            updateInput.removeEventListener('input', this.handleInputChange);
-            this.handleInputChange = () => {
-                this.updateButtonState();
-            };
-            updateInput.addEventListener('input', this.handleInputChange);
+            // Create input handler once if it doesn't exist
+            if (!this.inputChangeHandler) {
+                this.inputChangeHandler = () => {
+                    this.updateButtonState();
+                };
+            }
+            
+            updateInput.removeEventListener('input', this.inputChangeHandler);
+            updateInput.addEventListener('input', this.inputChangeHandler);
         }
     }
 
@@ -528,6 +536,24 @@ class FileUploadManager {
         downloadLink.download = fileName;
         downloadLink.textContent = 'Download Updated Presentation';
         downloadLink.className = 'download-button';
+        downloadLink.style.display = 'none'; // Hide the link initially
+        
+        // Add to DOM temporarily and trigger download
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        
+        // Clean up the temporary link after a short delay
+        setTimeout(() => {
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
+        }, 100);
+        
+        // Create visible download link for manual download if needed
+        const visibleDownloadLink = document.createElement('a');
+        visibleDownloadLink.href = url;
+        visibleDownloadLink.download = fileName;
+        visibleDownloadLink.textContent = 'Download Updated Presentation Again';
+        visibleDownloadLink.className = 'download-button';
         
         // Show success message
         const successDiv = document.createElement('div');
@@ -537,10 +563,10 @@ class FileUploadManager {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="20 6 9 17 4 12"/>
                 </svg>
-                <span>Presentation updated successfully!</span>
+                <span>Presentation updated successfully! Download should start automatically.</span>
             </div>
         `;
-        successDiv.appendChild(downloadLink);
+        successDiv.appendChild(visibleDownloadLink);
         
         // Insert into progress section
         const progressSection = document.getElementById('update-progress-section');
@@ -548,6 +574,8 @@ class FileUploadManager {
             progressSection.innerHTML = '';
             progressSection.appendChild(successDiv);
         }
+        
+        console.log('Download triggered for:', fileName);
     }
 
     /**
