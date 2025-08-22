@@ -19,19 +19,40 @@ class TabManager {
         
         console.log('TabManager initializing...');
         
-        // Ensure DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
+        // Enhanced DOM readiness check for packaged apps
+        const attemptInitialization = () => {
+            try {
+                // Check if required DOM elements exist
+                const tabButtons = document.querySelectorAll('.tab-button');
+                const tabContents = document.querySelectorAll('.tab-content');
+                
+                if (tabButtons.length === 0 || tabContents.length === 0) {
+                    console.warn('TabManager: DOM elements not ready, retrying...');
+                    setTimeout(attemptInitialization, 100);
+                    return;
+                }
+                
+                console.log(`TabManager: Found ${tabButtons.length} tab buttons and ${tabContents.length} tab contents`);
+                
                 this.setupTabButtons();
                 this.loadSavedTab();
-            });
-        } else {
-            this.setupTabButtons();
-            this.loadSavedTab();
-        }
+                this.isInitialized = true;
+                console.log('TabManager initialization complete');
+                
+            } catch (error) {
+                console.error('TabManager initialization error:', error);
+                // Retry after delay
+                setTimeout(attemptInitialization, 500);
+            }
+        };
         
-        this.isInitialized = true;
-        console.log('TabManager initialization complete');
+        // Try initialization immediately, or wait for DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', attemptInitialization);
+        } else {
+            // Give a small delay for packaged apps
+            setTimeout(attemptInitialization, 50);
+        }
     }
 
     /**
