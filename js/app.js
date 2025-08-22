@@ -52,6 +52,9 @@ class PowerPointGeneratorApp {
             // Set up keyboard shortcuts
             this.setupKeyboardShortcuts();
             
+            // Initialize time savings dashboard
+            this.initializeTimeSavingsDashboard();
+            
             // Mark as initialized
             this.isInitialized = true;
             
@@ -89,6 +92,7 @@ class PowerPointGeneratorApp {
             this.components.aiService = window.aiService || (typeof aiService !== 'undefined' ? aiService : null);
             this.components.fileService = window.fileService || (typeof fileService !== 'undefined' ? fileService : null);
             this.components.pythonService = window.pythonService || (typeof pythonService !== 'undefined' ? pythonService : null);
+            this.components.timeSavingsService = window.timeSavingsService || (typeof timeSavingsService !== 'undefined' ? timeSavingsService : null);
             
             // Initialize utilities
             this.components.formatters = window.Formatters || (typeof Formatters !== 'undefined' ? Formatters : null);
@@ -141,6 +145,118 @@ class PowerPointGeneratorApp {
         setTimeout(() => {
             this.updateAllButtonStates();
         }, 500);
+    }
+
+    /**
+     * Initialize time savings dashboard
+     */
+    initializeTimeSavingsDashboard() {
+        if (this.components.timeSavingsService) {
+            // Initialize dashboard widget in header
+            const widget = document.getElementById('time-savings-widget');
+            if (widget) {
+                this.setupTimeSavingsWidget(widget);
+            }
+            console.log('✓ Time savings dashboard initialized');
+        }
+    }
+
+    /**
+     * Set up time savings widget in header
+     * @param {Element} widget - Widget container
+     */
+    setupTimeSavingsWidget(widget) {
+        const timeSavings = this.components.timeSavingsService;
+        const stats = timeSavings.getStatistics();
+        
+        // Update the time display
+        const timeDisplay = widget.querySelector('#total-time-saved');
+        if (timeDisplay) {
+            timeDisplay.textContent = stats.total.formatted;
+            timeDisplay.title = `Total time saved: ${stats.total.formatted} | Click for detailed dashboard`;
+        }
+        
+        // Set up click handler to show full dashboard
+        widget.addEventListener('click', () => {
+            this.showTimeSavingsDashboard();
+        });
+        
+        // Update widget every time an action is performed
+        this.updateTimeSavingsWidget = () => {
+            const newStats = timeSavings.getStatistics();
+            if (timeDisplay) {
+                timeDisplay.textContent = newStats.total.formatted;
+            }
+        };
+    }
+
+    /**
+     * Show detailed time savings dashboard
+     */
+    showTimeSavingsDashboard() {
+        const modal = document.createElement('div');
+        modal.className = 'time-dashboard-modal';
+        modal.innerHTML = `
+            <div class="modal-overlay">
+                <div class="modal-content large">
+                    <div class="modal-header">
+                        <h3>⏱️ Time Saved Dashboard</h3>
+                        <button class="modal-close" title="Close">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="time-savings-dashboard"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="export-time-data" class="secondary-button">Export Data</button>
+                        <button id="reset-time-data" class="secondary-button">Reset Data</button>
+                        <button class="primary-button modal-close">Close</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Initialize dashboard in modal
+        const dashboardContainer = modal.querySelector('#time-savings-dashboard');
+        if (dashboardContainer && this.components.timeSavingsService) {
+            this.components.timeSavingsService.renderDashboard(dashboardContainer);
+        }
+        
+        // Set up event handlers
+        const closeButtons = modal.querySelectorAll('.modal-close');
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        });
+        
+        const exportBtn = modal.querySelector('#export-time-data');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                const data = this.components.timeSavingsService.exportData();
+                const dataStr = JSON.stringify(data, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `powerpoint-generator-time-savings-${new Date().toISOString().slice(0, 10)}.json`;
+                link.click();
+                
+                URL.revokeObjectURL(url);
+                this.showNotification('Time savings data exported', 'success');
+            });
+        }
+        
+        const resetBtn = modal.querySelector('#reset-time-data');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                this.components.timeSavingsService.resetData();
+                this.updateTimeSavingsWidget();
+                document.body.removeChild(modal);
+            });
+        }
     }
 
     /**

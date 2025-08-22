@@ -383,7 +383,8 @@ class FileUploadManager {
             this.showOutlineForReview(improvedOutline);
             
             if (window.timeSavingsService) {
-                window.timeSavingsService.trackTimeSaved('ai_analysis');
+                const slideCount = improvedOutline.slides ? improvedOutline.slides.length : 4;
+                window.timeSavingsService.trackTimeSaved('ai_analysis', slideCount);
             }
 
         } catch (error) {
@@ -438,7 +439,8 @@ class FileUploadManager {
             }
             
             if (window.timeSavingsService) {
-                window.timeSavingsService.trackTimeSaved('powerpoint_generation');
+                const slideCount = this.generatedOutline.slides ? this.generatedOutline.slides.length : 4;
+                window.timeSavingsService.trackTimeSaved('update_powerpoint', slideCount);
             }
 
         } catch (error) {
