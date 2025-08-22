@@ -522,44 +522,406 @@ class FileUploadManager {
     }
 
     /**
-     * Generate fallback outline when AI is not available
+     * Generate fallback outline when AI is not available - Enhanced contextual analysis
      * @param {Object} content - Extracted content
      * @param {string} updateNotes - User update notes
      * @returns {Object} Fallback outline
      */
     generateFallbackOutline(content, updateNotes) {
+        // Analyze the presentation context and user goals
+        const analysisContext = this.analyzeContextAndGoals(content, updateNotes);
+        
         const outline = {
-            title: `${content.title || 'Improved Presentation'} - Enhanced`,
+            title: `${content.title || 'Improved Presentation'} - ${analysisContext.improvement}`,
             theme: 'professional',
-            totalSlides: content.slides.length + 1,
-            estimatedDuration: `${Math.ceil((content.slides.length + 1) * 1.5)} minutes`,
+            totalSlides: content.slides.length + analysisContext.suggestedSlides.length,
+            estimatedDuration: `${Math.ceil((content.slides.length + analysisContext.suggestedSlides.length) * 1.5)} minutes`,
             slides: []
         };
 
-        // Add existing slides with improvements
+        // Add existing slides with intelligent enhancements
         content.slides.forEach((slide, index) => {
-            outline.slides.push({
-                slideNumber: index + 1,
-                title: slide.title || `Slide ${index + 1}`,
-                slideType: index === 0 ? 'title' : 'content',
-                bullets: this.extractBulletsFromContent(slide.content),
-                content: [slide.content || 'Content to be enhanced'],
-                presenterNotes: `Enhanced version of original slide ${index + 1}`
-            });
+            const enhancedSlide = this.enhanceExistingSlide(slide, index, analysisContext);
+            outline.slides.push(enhancedSlide);
         });
 
-        // Add new slide based on user instructions
-        outline.slides.push({
-            slideNumber: outline.slides.length + 1,
-            title: this.generateSlideTitle(updateNotes),
-            slideType: 'content',
-            bullets: this.generateBulletsFromNotes(updateNotes),
-            content: [updateNotes],
-            presenterNotes: 'New slide based on user requirements'
+        // Add contextually relevant new slides based on analysis
+        analysisContext.suggestedSlides.forEach((suggestedSlide, index) => {
+            outline.slides.push({
+                slideNumber: outline.slides.length + 1,
+                title: suggestedSlide.title,
+                slideType: suggestedSlide.type,
+                bullets: suggestedSlide.bullets,
+                content: suggestedSlide.content,
+                presenterNotes: suggestedSlide.notes
+            });
         });
 
         this.generatedOutline = outline;
         return outline;
+    }
+
+    /**
+     * Analyze presentation context and user goals to suggest improvements
+     * @param {Object} content - Presentation content
+     * @param {string} updateNotes - User improvement goals
+     * @returns {Object} Analysis context
+     */
+    analyzeContextAndGoals(content, updateNotes) {
+        const fileName = this.uploadedFile.name.toLowerCase();
+        const userGoals = updateNotes.toLowerCase();
+        
+        // Determine presentation context from filename and content
+        const context = this.inferPresentationContext(fileName, content);
+        
+        // Analyze user improvement goals
+        const goals = this.analyzeUserGoals(userGoals);
+        
+        // Generate contextual suggestions
+        const suggestions = this.generateContextualSuggestions(context, goals, content);
+        
+        return {
+            context: context,
+            goals: goals,
+            improvement: suggestions.improvement,
+            suggestedSlides: suggestions.slides
+        };
+    }
+
+    /**
+     * Infer presentation context from filename and existing content
+     * @param {string} fileName - File name
+     * @param {Object} content - Presentation content
+     * @returns {Object} Inferred context
+     */
+    inferPresentationContext(fileName, content) {
+        const context = {
+            type: 'general',
+            domain: 'business',
+            purpose: 'informational',
+            audience: 'professional'
+        };
+
+        // Analyze filename for context clues
+        if (fileName.includes('meeting') || fileName.includes('kickoff')) {
+            context.type = 'meeting';
+            context.purpose = 'planning';
+        } else if (fileName.includes('project') || fileName.includes('plan')) {
+            context.type = 'project';
+            context.purpose = 'strategic';
+        } else if (fileName.includes('proposal') || fileName.includes('pitch')) {
+            context.type = 'proposal';
+            context.purpose = 'persuasive';
+        } else if (fileName.includes('review') || fileName.includes('status')) {
+            context.type = 'review';
+            context.purpose = 'reporting';
+        }
+
+        // Determine audience from content context
+        if (content.title && content.title.toLowerCase().includes('executive')) {
+            context.audience = 'executive';
+        } else if (content.slides.some(slide => slide.title.toLowerCase().includes('technical'))) {
+            context.audience = 'technical';
+        }
+
+        return context;
+    }
+
+    /**
+     * Analyze user goals from improvement notes
+     * @param {string} userGoals - User's improvement goals
+     * @returns {Object} Goal analysis
+     */
+    analyzeUserGoals(userGoals) {
+        const goals = {
+            primary: 'enhance',
+            focus: [],
+            tone: 'professional',
+            specific: []
+        };
+
+        // Analyze improvement intent
+        if (userGoals.includes('better') || userGoals.includes('improve')) {
+            goals.primary = 'enhance';
+        } else if (userGoals.includes('add') || userGoals.includes('include')) {
+            goals.primary = 'expand';
+        } else if (userGoals.includes('simplify') || userGoals.includes('streamline')) {
+            goals.primary = 'simplify';
+        } else if (userGoals.includes('detail') || userGoals.includes('comprehensive')) {
+            goals.primary = 'elaborate';
+        }
+
+        // Identify focus areas
+        if (userGoals.includes('visual') || userGoals.includes('chart') || userGoals.includes('graph')) {
+            goals.focus.push('visual');
+        }
+        if (userGoals.includes('data') || userGoals.includes('metric') || userGoals.includes('number')) {
+            goals.focus.push('data');
+        }
+        if (userGoals.includes('action') || userGoals.includes('next step') || userGoals.includes('todo')) {
+            goals.focus.push('actionable');
+        }
+        if (userGoals.includes('background') || userGoals.includes('context') || userGoals.includes('history')) {
+            goals.focus.push('context');
+        }
+
+        return goals;
+    }
+
+    /**
+     * Generate contextual suggestions based on analysis
+     * @param {Object} context - Presentation context
+     * @param {Object} goals - User goals
+     * @param {Object} content - Original content
+     * @returns {Object} Suggestions
+     */
+    generateContextualSuggestions(context, goals, content) {
+        const suggestions = {
+            improvement: 'Enhanced',
+            slides: []
+        };
+
+        // Generate contextual improvement title
+        if (goals.primary === 'enhance') {
+            suggestions.improvement = 'Enhanced & Improved';
+        } else if (goals.primary === 'expand') {
+            suggestions.improvement = 'Comprehensive Edition';
+        } else if (goals.primary === 'elaborate') {
+            suggestions.improvement = 'Detailed Analysis';
+        }
+
+        // Generate contextually relevant slides based on presentation type
+        switch (context.type) {
+            case 'meeting':
+                suggestions.slides = this.generateMeetingSlides(goals, content);
+                break;
+            case 'project':
+                suggestions.slides = this.generateProjectSlides(goals, content);
+                break;
+            case 'proposal':
+                suggestions.slides = this.generateProposalSlides(goals, content);
+                break;
+            case 'review':
+                suggestions.slides = this.generateReviewSlides(goals, content);
+                break;
+            default:
+                suggestions.slides = this.generateGeneralSlides(goals, content);
+                break;
+        }
+
+        return suggestions;
+    }
+
+    /**
+     * Generate meeting-specific slides
+     * @param {Object} goals - User goals
+     * @param {Object} content - Content context
+     * @returns {Array} Suggested slides
+     */
+    generateMeetingSlides(goals, content) {
+        return [
+            {
+                title: 'Meeting Objectives & Success Criteria',
+                type: 'content',
+                bullets: [
+                    'Clear meeting objectives and desired outcomes',
+                    'Success metrics and evaluation criteria',
+                    'Alignment with broader strategic goals',
+                    'Key stakeholder expectations'
+                ],
+                content: ['Strategic context and measurable objectives for this meeting'],
+                notes: 'Focus on setting clear expectations and success criteria'
+            },
+            {
+                title: 'Action Items & Next Steps',
+                type: 'content',
+                bullets: [
+                    'Specific action items with owners and deadlines',
+                    'Follow-up meeting schedule and agenda',
+                    'Resource requirements and dependencies',
+                    'Communication plan and status updates'
+                ],
+                content: ['Concrete next steps to move forward effectively'],
+                notes: 'Ensure all action items are SMART (Specific, Measurable, Achievable, Relevant, Time-bound)'
+            }
+        ];
+    }
+
+    /**
+     * Generate project-specific slides
+     * @param {Object} goals - User goals
+     * @param {Object} content - Content context
+     * @returns {Array} Suggested slides
+     */
+    generateProjectSlides(goals, content) {
+        return [
+            {
+                title: 'Project Impact & Strategic Value',
+                type: 'content',
+                bullets: [
+                    'Business value and ROI potential',
+                    'Strategic alignment with company objectives',
+                    'Risk mitigation and contingency planning',
+                    'Success metrics and KPIs'
+                ],
+                content: ['Comprehensive analysis of project value and strategic importance'],
+                notes: 'Connect project activities to broader business outcomes'
+            },
+            {
+                title: 'Implementation Roadmap & Milestones',
+                type: 'content',
+                bullets: [
+                    'Phase-by-phase implementation plan',
+                    'Critical milestones and dependencies',
+                    'Resource allocation and team structure',
+                    'Timeline optimization and risk management'
+                ],
+                content: ['Detailed roadmap for successful project execution'],
+                notes: 'Focus on realistic timelines and resource requirements'
+            }
+        ];
+    }
+
+    /**
+     * Generate proposal-specific slides
+     * @param {Object} goals - User goals
+     * @param {Object} content - Content context
+     * @returns {Array} Suggested slides
+     */
+    generateProposalSlides(goals, content) {
+        return [
+            {
+                title: 'Problem Statement & Opportunity',
+                type: 'content',
+                bullets: [
+                    'Current challenges and pain points',
+                    'Market opportunity and competitive landscape',
+                    'Cost of inaction and urgency factors',
+                    'Strategic importance to organization'
+                ],
+                content: ['Clear articulation of the problem and opportunity being addressed'],
+                notes: 'Make the problem relatable and urgent for the audience'
+            },
+            {
+                title: 'Solution Benefits & ROI',
+                type: 'content',
+                bullets: [
+                    'Quantifiable benefits and cost savings',
+                    'Return on investment analysis',
+                    'Risk reduction and competitive advantages',
+                    'Implementation timeline and quick wins'
+                ],
+                content: ['Compelling case for the proposed solution with measurable outcomes'],
+                notes: 'Focus on tangible, measurable benefits that resonate with decision-makers'
+            }
+        ];
+    }
+
+    /**
+     * Generate review-specific slides
+     * @param {Object} goals - User goals
+     * @param {Object} content - Content context
+     * @returns {Array} Suggested slides
+     */
+    generateReviewSlides(goals, content) {
+        return [
+            {
+                title: 'Key Achievements & Successes',
+                type: 'content',
+                bullets: [
+                    'Major accomplishments and milestones reached',
+                    'Quantitative results and performance metrics',
+                    'Positive feedback and stakeholder satisfaction',
+                    'Unexpected wins and learning opportunities'
+                ],
+                content: ['Comprehensive review of achievements and positive outcomes'],
+                notes: 'Celebrate successes while maintaining credibility with data'
+            },
+            {
+                title: 'Lessons Learned & Future Improvements',
+                type: 'content',
+                bullets: [
+                    'Key insights and learning from the period',
+                    'Areas for improvement and optimization',
+                    'Process enhancements and best practices',
+                    'Recommendations for future initiatives'
+                ],
+                content: ['Forward-looking insights for continuous improvement'],
+                notes: 'Balance constructive feedback with actionable next steps'
+            }
+        ];
+    }
+
+    /**
+     * Generate general-purpose slides
+     * @param {Object} goals - User goals
+     * @param {Object} content - Content context
+     * @returns {Array} Suggested slides
+     */
+    generateGeneralSlides(goals, content) {
+        return [
+            {
+                title: 'Key Insights & Analysis',
+                type: 'content',
+                bullets: [
+                    'Critical insights from the presentation content',
+                    'Data-driven analysis and conclusions',
+                    'Strategic implications and considerations',
+                    'Supporting evidence and validation'
+                ],
+                content: ['Deep analysis of the presentation topic with actionable insights'],
+                notes: 'Provide analytical depth that adds value to the presentation'
+            },
+            {
+                title: 'Recommendations & Next Steps',
+                type: 'content',
+                bullets: [
+                    'Specific recommendations based on analysis',
+                    'Prioritized action items with clear ownership',
+                    'Resource requirements and timeline',
+                    'Success metrics and monitoring approach'
+                ],
+                content: ['Actionable recommendations that drive progress and results'],
+                notes: 'Make recommendations specific, achievable, and measurable'
+            }
+        ];
+    }
+
+    /**
+     * Enhance existing slide with contextual improvements
+     * @param {Object} slide - Original slide
+     * @param {number} index - Slide index
+     * @param {Object} context - Analysis context
+     * @returns {Object} Enhanced slide
+     */
+    enhanceExistingSlide(slide, index, context) {
+        const enhanced = {
+            slideNumber: index + 1,
+            title: slide.title || `Slide ${index + 1}`,
+            slideType: index === 0 ? 'title' : 'content',
+            bullets: this.extractBulletsFromContent(slide.content),
+            content: [slide.content || 'Content to be enhanced'],
+            presenterNotes: `Enhanced version of original slide ${index + 1}`
+        };
+
+        // Add contextual enhancements
+        if (context.goals.focus.includes('actionable') && index === content.slides.length - 1) {
+            enhanced.title = enhanced.title + ' - Action Plan';
+            enhanced.bullets.push('Specific next steps and deliverables');
+            enhanced.presenterNotes += '. Focus on actionable outcomes and clear responsibilities.';
+        }
+
+        if (context.goals.focus.includes('data') && enhanced.bullets.length < 3) {
+            enhanced.bullets.push('Supporting data and metrics');
+            enhanced.presenterNotes += '. Include relevant data points to support key messages.';
+        }
+
+        if (context.goals.focus.includes('context') && index === 0) {
+            enhanced.bullets.unshift('Background and context setting');
+            enhanced.presenterNotes += '. Provide sufficient context for audience understanding.';
+        }
+
+        return enhanced;
     }
 
     /**
@@ -902,11 +1264,21 @@ Generate comprehensive content that addresses the user's request while maintaini
                 ${slidesHtml}
             </div>
             <div class="outline-actions">
-                <button id="generate-from-outline-btn" class="generate-button" style="background: #28a745; color: white; padding: 12px 24px; font-size: 16px; font-weight: bold;">
-                    🎯 Generate PowerPoint from This Outline
+                <button id="generate-from-outline-btn" class="primary-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Generate PowerPoint from This Outline
                 </button>
                 <button id="regenerate-outline-btn" class="secondary-button">
-                    🔄 Regenerate Outline
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <polyline points="1 20 1 14 7 14"/>
+                        <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                    </svg>
+                    Regenerate Outline
                 </button>
             </div>
         `;
