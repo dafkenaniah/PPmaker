@@ -370,26 +370,21 @@ class FileUploadManager {
      * @returns {Promise<Object>} Update instructions
      */
     async generateUpdateInstructions(content, updateNotes) {
-        const prompt = `
-        You are a PowerPoint update assistant. I have an existing presentation and need to make updates based on user instructions.
+        // For now, create simple update instructions based on user notes
+        // This avoids the AI service CORS issues
+        
+        const instructions = {
+            slides: content.slides.map((slide, index) => ({
+                slideNumber: slide.slide_number,
+                title: slide.title,
+                content: slide.content,
+                updateNotes: updateNotes // Add user's update notes to each slide
+            })),
+            updateInstructions: updateNotes,
+            timestamp: new Date().toISOString()
+        };
 
-        Current presentation structure:
-        ${JSON.stringify(content, null, 2)}
-
-        User update instructions:
-        ${updateNotes}
-
-        Please provide detailed instructions for updating the presentation, including:
-        1. Which slides to modify, add, or remove
-        2. Specific content changes for each slide
-        3. Any formatting or layout adjustments needed
-        4. New slide content if slides need to be added
-
-        Return the response in JSON format with the updated presentation structure.
-        `;
-
-        const response = await aiService.generateContent(prompt);
-        return JSON.parse(response.content);
+        return instructions;
     }
 
     /**
