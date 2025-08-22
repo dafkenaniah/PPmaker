@@ -96,7 +96,8 @@ class AIService {
             return slideOutline;
         } catch (error) {
             console.error('Error analyzing presentation:', error);
-            throw new Error(CONFIG.ERRORS.AI_API_ERROR);
+            // Don't throw error here - let the FileUploadManager handle fallback
+            throw new Error('AI service is temporarily unavailable. Please try again.');
         }
     }
 
