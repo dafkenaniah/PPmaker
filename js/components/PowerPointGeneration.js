@@ -530,6 +530,113 @@ class PowerPointGeneration {
     }
 
     /**
+     * Generate PowerPoint from outline - called by FileUploadManager
+     * @param {Object} outline - Slide outline to generate from
+     * @returns {Promise<Blob>} - Generated PowerPoint blob
+     */
+    async generateFromOutline(outline) {
+        console.log('[PowerPointGeneration] generateFromOutline called with outline:', outline);
+        
+        if (!outline || !outline.slides || outline.slides.length === 0) {
+            throw new Error('Invalid outline provided for PowerPoint generation');
+        }
+        
+        // Set the outline
+        this.setOutline(outline);
+        
+        try {
+            // Create PowerPoint using PptxGenJS
+            const pptx = new PptxGenJS();
+            
+            // Set presentation properties
+            pptx.author = 'PowerPoint Generator';
+            pptx.company = 'PowerPoint Generator';
+            pptx.subject = 'Generated Presentation';
+            pptx.title = outline.title || outline.slides[0]?.title || 'Presentation';
+
+            // Add slides from outline
+            outline.slides.forEach((slideData, index) => {
+                console.log(`[PowerPointGeneration] Creating slide ${index + 1}: ${slideData.title}`);
+                
+                // Create slide
+                const slide = pptx.addSlide();
+                
+                // Add title
+                if (slideData.title) {
+                    slide.addText(slideData.title, {
+                        x: '5%',
+                        y: '5%', 
+                        w: '90%',
+                        h: '15%',
+                        fontSize: 32,
+                        bold: true,
+                        align: 'left'
+                    });
+                }
+                
+                // Add content
+                if (slideData.bullets && slideData.bullets.length > 0) {
+                    slideData.bullets.forEach((bullet, bulletIndex) => {
+                        slide.addText(`• ${bullet}`, {
+                            x: '8%',
+                            y: `${25 + (bulletIndex * 8)}%`,
+                            w: '85%',
+                            h: '6%',
+                            fontSize: 20,
+                            align: 'left',
+                            color: '333333'
+                        });
+                    });
+                } else if (slideData.content && slideData.content.length > 0) {
+                    slide.addText(slideData.content.join('\n'), {
+                        x: '5%',
+                        y: '25%',
+                        w: '90%',
+                        h: '70%', 
+                        fontSize: 20,
+                        align: 'left',
+                        color: '333333'
+                    });
+                }
+                
+                // Add presenter notes
+                if (slideData.presenterNotes) {
+                    slide.addNotes(slideData.presenterNotes);
+                }
+            });
+
+            // Generate filename
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+            const slideCount = outline.slides.length;
+            let baseName = 'ai_improved_presentation';
+            
+            if (outline.title) {
+                baseName = outline.title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s]/g, '')
+                    .replace(/\s+/g, '_')
+                    .substring(0, 30);
+            }
+            
+            const filename = `${baseName}_${slideCount}slides_${timestamp}.pptx`;
+            
+            console.log(`[PowerPointGeneration] Writing PowerPoint file: ${filename}`);
+            
+            // Write the PowerPoint file - this will trigger download
+            await pptx.writeFile({ fileName: filename });
+            
+            console.log('[PowerPointGeneration] PowerPoint generated and download triggered');
+            
+            // Return a mock blob since PptxGenJS handles download internally
+            return new Blob(['PowerPoint generated'], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' });
+            
+        } catch (error) {
+            console.error('[PowerPointGeneration] Error in generateFromOutline:', error);
+            throw new Error(`Failed to generate PowerPoint: ${error.message}`);
+        }
+    }
+
+    /**
      * Show the generation section
      */
     showSection() {
