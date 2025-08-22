@@ -61,13 +61,10 @@ class DalleService {
     }
 
     async generateImage(prompt, size) {
+        console.log('DALL-E generateImage called - using offline placeholder mode');
+        
         try {
-            // For now, disable DALL-E functionality to prevent errors
-            // TODO: Implement proper DALL-E integration when image generation is needed
-            
-            console.warn('DALL-E image generation disabled - using placeholder');
-            
-            // Create a placeholder image instead of calling DALL-E
+            // Create a placeholder image instead of calling external AI service
             const placeholderBlob = await this.createPlaceholderImage(prompt, size);
             
             return {
@@ -79,8 +76,16 @@ class DalleService {
                 isPlaceholder: true
             };
         } catch (error) {
-            console.error('Error generating image:', error);
-            throw new Error(`Failed to generate image: ${error.message}`);
+            console.error('Error creating placeholder image:', error);
+            // Return a simple fallback
+            return {
+                url: 'data:image/svg+xml;base64,' + btoa('<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><rect width="100" height="100" fill="#f0f0f0"/><text x="50" y="50" text-anchor="middle" fill="#666">Chart</text></svg>'),
+                blob: null,
+                prompt: prompt,
+                createdAt: new Date().toISOString(),
+                size: size,
+                isPlaceholder: true
+            };
         }
     }
 
