@@ -395,7 +395,10 @@ class FileUploadManager {
                 updateBtn.disabled = false;
                 updateBtn.textContent = 'Analyze & Generate Outline';
             }
-            this.hideUpdateProgress();
+            // Don't hide progress if outline was successfully generated
+            if (!this.generatedOutline) {
+                this.hideUpdateProgress();
+            }
             console.log('AI analysis process completed');
         }
     }
