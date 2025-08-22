@@ -646,14 +646,22 @@ class PowerPointGeneration {
      * Show the generation section
      */
     showSection() {
-        this.generationSection.classList.remove('hidden');
+        if (this.generationSection) {
+            this.generationSection.classList.remove('hidden');
+        } else {
+            console.warn('[PowerPointGeneration] generationSection not found, skipping show');
+        }
     }
 
     /**
      * Hide the generation section
      */
     hideSection() {
-        this.generationSection.classList.add('hidden');
+        if (this.generationSection) {
+            this.generationSection.classList.add('hidden');
+        } else {
+            console.warn('[PowerPointGeneration] generationSection not found, skipping hide');
+        }
     }
 
     /**
