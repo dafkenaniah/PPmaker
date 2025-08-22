@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes to PowerPoint Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14,2 14,8 20,8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                        <polyline points="10,9 9,9 8,9"/>
+                    </svg>
+                </div>
+                <div class="header-text">
+                    <h1>Notes to PowerPoint Generator</h1>
+                    <p>AI-Powered Presentation Creation</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Tab Navigation -->
+            <nav class="tab-navigation">
+                <button class="tab-button active" data-tab="create-new">Create New</button>
+                <button class="tab-button" data-tab="meeting">Meeting to PPT</button>
+                <button class="tab-button" data-tab="update">Update Existing</button>
+                <button class="tab-button" data-tab="charts">Chart Generation</button>
+                <button class="tab-button" data-tab="audience">Audience Settings</button>
+                <button class="tab-button" data-tab="config">Configuration</button>
+            </nav>
+
+            <!-- Create New Tab -->
+            <div class="tab-content active" id="create-new-tab">
+                <!-- Input Section -->
+                <section class="input-section">
+                <div class="section-header">
+                    <h2>Your Notes</h2>
+                    <div class="character-counter">
+                        <span id="char-count">0</span> characters
+                    </div>
+                </div>
+                <div class="input-container">
+                    <textarea 
+                        id="notes-input" 
+                        placeholder="Paste your presentation notes here... Use # for slide titles, ## for subtitles, and - for bullet points"
+                        rows="20"
+                    ></textarea>
+                    <button id="clear-btn" class="clear-button" title="Clear notes">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                            <line x1="10" y1="11" x2="10" y2="17"/>
+                            <line x1="14" y1="11" x2="14" y2="17"/>
+                        </svg>
+                    </button>
+                </div>
+            </section>
+
+            <!-- AI Processing Section -->
+            <section class="processing-section">
+                <div class="section-header">
+                    <h2>AI Processing</h2>
+                </div>
+                <div class="processing-container">
+                    <button id="generate-outline-btn" class="primary-button" disabled>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                            <path d="M12 1v6m0 6v6"/>
+                            <path d="m21 12-6-3-6 3-6-3"/>
+                        </svg>
+                        Generate Slide Outline
+                    </button>
+                    <div id="processing-status" class="processing-status hidden">
+                        <div class="spinner"></div>
+                        <span id="status-text">Processing your notes...</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Outline Preview Section -->
+            <section id="outline-section" class="outline-section hidden">
+                <div class="section-header">
+                    <h2>Generated Outline</h2>
+                    <button id="regenerate-outline-btn" class="secondary-button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"/>
+                            <polyline points="1 20 1 14 7 14"/>
+                            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                        </svg>
+                        Regenerate
+                    </button>
+                </div>
+                <div id="outline-preview" class="outline-preview">
+                    <!-- Outline content will be inserted here -->
+                </div>
+            </section>
+
+            <!-- PowerPoint Generation Section -->
+            <section id="generation-section" class="generation-section hidden">
+                <div class="section-header">
+                    <h2>Create PowerPoint</h2>
+                </div>
+                <div class="generation-container">
+                    <button id="create-powerpoint-btn" class="success-button">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Create PowerPoint
+                    </button>
+                    <div id="generation-progress" class="generation-progress hidden">
+                        <div class="progress-bar">
+                            <div id="progress-fill" class="progress-fill"></div>
+                        </div>
+                        <span id="progress-text">Generating presentation...</span>
+                    </div>
+                    <div id="download-section" class="download-section hidden">
+                        <div class="success-message">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                            <span>PowerPoint created successfully!</span>
+                        </div>
+                        <a id="download-link" class="download-button" href="#" download>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Download Presentation
+                        </a>
+                    </div>
+                </div>
+            </section>
+            </div>
+
+            <!-- Meeting to PowerPoint Tab -->
+            <div class="tab-content" id="meeting-tab">
+                <!-- Meeting Type Selection -->
+                <section class="meeting-type-section">
+                    <div class="section-header">
+                        <h2>Meeting Content Type</h2>
+                        <p class="section-description">Select the type of content you want to convert to a presentation</p>
+                    </div>
+                    
+                    <div class="meeting-type-grid">
+                        <div class="meeting-type-card active" data-type="meeting">
+                            <div class="meeting-type-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M8 2v4"/>
+                                    <path d="M16 2v4"/>
+                                    <rect width="18" height="18" x="3" y="4" rx="2"/>
+                                    <path d="M3 10h18"/>
+                                    <path d="M8 14h.01"/>
+                                    <path d="M12 14h.01"/>
+                                    <path d="M16 14h.01"/>
+                                    <path d="M8 18h.01"/>
+                                    <path d="M12 18h.01"/>
+                                    <path d="M16 18h.01"/>
+                                </svg>
+                            </div>
+                            <h3>Meeting Transcription</h3>
+                            <p>Convert meeting recordings, transcripts, or notes into structured presentations</p>
+                        </div>
+                        
+                        <div class="meeting-type-card" data-type="slack">
+                            <div class="meeting-type-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                    <path d="M8 9h8"/>
+                                    <path d="M8 13h6"/>
+                                </svg>
+                            </div>
+                            <h3>Slack Conversation</h3>
+                            <p>Transform Slack discussions, threads, and team conversations into presentations</p>
+                        </div>
+                        
+                        <div class="meeting-type-card" data-type="teams">
+                            <div class="meeting-type-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <h3>Teams Chat</h3>
+                            <p>Convert Microsoft Teams conversations and meeting chats into presentations</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Content Input Section -->
+                <section class="meeting-input-section">
+                    <div class="section-header">
+                        <h2 id="meeting-input-title">Meeting Transcription</h2>
+                        <div class="meeting-stats">
+                            <span id="meeting-char-count">0</span> characters
+                            <span class="separator">•</span>
+                            <span id="meeting-word-count">0</span> words
+                        </div>
+                    </div>
+                    
+                    <div class="meeting-input-container">
+                        <div class="input-toolbar">
+                            <div class="toolbar-section">
+                                <label class="toolbar-label">Meeting Context:</label>
+                                <select id="meeting-context-select" class="context-select">
+                                    <option value="general">General Meeting</option>
+                                    <option value="standup">Daily Standup</option>
+                                    <option value="planning">Sprint Planning</option>
+                                    <option value="retrospective">Retrospective</option>
+                                    <option value="review">Sprint Review</option>
+                                    <option value="brainstorm">Brainstorming Session</option>
+                                    <option value="decision">Decision Making</option>
+                                    <option value="status">Status Update</option>
+                                    <option value="kickoff">Project Kickoff</option>
+                                    <option value="postmortem">Post-mortem</option>
+                                </select>
+                            </div>
+                            
+                            <div class="toolbar-section">
+                                <label class="toolbar-label">Duration:</label>
+                                <input type="text" id="meeting-duration" placeholder="e.g., 1 hour" class="duration-input">
+                            </div>
+                            
+                            <div class="toolbar-section">
+                                <label class="toolbar-label">Participants:</label>
+                                <input type="number" id="meeting-participants" placeholder="5" min="1" max="50" class="participants-input">
+                            </div>
+                        </div>
+                        
+                        <textarea 
+                            id="meeting-content-input" 
+                            placeholder="Paste your meeting transcription, Slack conversation, or team chat here...
+
+For best results, include:
+• Speaker names or usernames
+• Timestamps (if available)
+• Key decisions made
+• Action items discussed
+• Important topics covered
+
+Example format:
+[10:00] John: Let's discuss the Q4 roadmap...
+[10:05] Sarah: I think we should prioritize the mobile features...
+[10:10] Mike: What about the performance improvements?"
+                            rows="25"
+                        ></textarea>
+                        
+                        <div class="input-actions">
+                            <button id="clear-meeting-btn" class="secondary-button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                                Clear Content
+                            </button>
+                            
+                            <button id="sample-meeting-btn" class="secondary-button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                                Load Sample
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Processing Options -->
+                <section class="meeting-processing-section">
+                    <div class="section-header">
+                        <h2>Processing Options</h2>
+                        <p class="section-description">Customize how your meeting content is converted</p>
+                    </div>
+                    
+                    <div class="processing-options-grid">
+                        <div class="option-card">
+                            <div class="option-header">
+                                <input type="checkbox" id="extract-action-items" checked>
+                                <label for="extract-action-items">Extract Action Items</label>
+                            </div>
+                            <p>Identify and highlight action items, decisions, and next steps</p>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">
+                                <input type="checkbox" id="identify-speakers" checked>
+                                <label for="identify-speakers">Identify Key Contributors</label>
+                            </div>
+                            <p>Recognize and attribute key points to specific speakers</p>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">
+                                <input type="checkbox" id="extract-decisions">
+                                <label for="extract-decisions">Highlight Decisions</label>
+                            </div>
+                            <p>Emphasize important decisions and agreements made</p>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">
+                                <input type="checkbox" id="timeline-structure">
+                                <label for="timeline-structure">Timeline Structure</label>
+                            </div>
+                            <p>Organize content chronologically based on discussion flow</p>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">
+                                <input type="checkbox" id="topic-grouping" checked>
+                                <label for="topic-grouping">Group by Topics</label>
+                            </div>
+                            <p>Organize content by discussion topics rather than chronologically</p>
+                        </div>
+                        
+                        <div class="option-card">
+                            <div class="option-header">
+                                <input type="checkbox" id="include-context">
+                                <label for="include-context">Include Context</label>
+                            </div>
+                            <p>Add background information and meeting context to slides</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Generate Presentation -->
+                <section class="meeting-generation-section">
+                    <div class="section-header">
+                        <h2>Generate Presentation</h2>
+                    </div>
+                    
+                    <div class="generation-container">
+                        <button id="generate-meeting-ppt-btn" class="primary-button" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            Convert to PowerPoint
+                        </button>
+                        
+                        <div id="meeting-processing-status" class="processing-status hidden">
+                            <div class="spinner"></div>
+                            <span id="meeting-status-text">Analyzing meeting content...</span>
+                        </div>
+                        
+                        <div class="processing-info">
+                            <p class="info-text">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M12 16v-4"/>
+                                    <path d="M12 8h.01"/>
+                                </svg>
+                                The AI will analyze your meeting content and create a structured presentation based on your selected audience and processing options.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Meeting Outline Preview -->
+                <section id="meeting-outline-section" class="outline-section hidden">
+                    <div class="section-header">
+                        <h2>Meeting Presentation Outline</h2>
+                        <button id="regenerate-meeting-outline-btn" class="secondary-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <polyline points="1 20 1 14 7 14"/>
+                                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                            </svg>
+                            Regenerate
+                        </button>
+                    </div>
+                    <div id="meeting-outline-preview" class="outline-preview">
+                        <!-- Meeting outline content will be inserted here -->
+                    </div>
+                </section>
+
+                <!-- Meeting PowerPoint Generation -->
+                <section id="meeting-generation-final-section" class="generation-section hidden">
+                    <div class="section-header">
+                        <h2>Create Meeting PowerPoint</h2>
+                    </div>
+                    <div class="generation-container">
+                        <button id="create-meeting-powerpoint-btn" class="success-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            Create PowerPoint
+                        </button>
+                        <div id="meeting-generation-progress" class="generation-progress hidden">
+                            <div class="progress-bar">
+                                <div id="meeting-progress-fill" class="progress-fill"></div>
+                            </div>
+                            <span id="meeting-progress-text">Generating presentation...</span>
+                        </div>
+                        <div id="meeting-download-section" class="download-section hidden">
+                            <div class="success-message">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"/>
+                                </svg>
+                                <span>Meeting PowerPoint created successfully!</span>
+                            </div>
+                            <a id="meeting-download-link" class="download-button" href="#" download>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7 10 12 15 17 10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                                Download Presentation
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Update Existing Tab -->
+            <div class="tab-content" id="update-tab">
+                <!-- Upload Section -->
+                <section class="upload-section">
+                    <div class="section-header">
+                        <h2>Upload Existing PowerPoint</h2>
+                    </div>
+                    <div class="upload-container">
+                        <div class="file-drop-zone" id="file-drop-zone">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p>Drop your PowerPoint file here or click to browse</p>
+                            <input type="file" id="ppt-file-input" accept=".pptx,.ppt" hidden>
+                            <button class="secondary-button" onclick="document.getElementById('ppt-file-input').click()">
+                                Browse Files
+                            </button>
+                        </div>
+                        <div id="uploaded-file-info" class="uploaded-file-info hidden">
+                            <div class="file-info">
+                                <span id="file-name"></span>
+                                <span id="file-size"></span>
+                            </div>
+                            <button id="remove-file-btn" class="remove-file-btn">Remove</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Update Notes Section -->
+                <section class="update-notes-section">
+                    <div class="section-header">
+                        <h2>Update Instructions</h2>
+                    </div>
+                    <div class="update-container">
+                        <textarea 
+                            id="update-notes-input" 
+                            placeholder="Enter your update instructions here... Describe what changes you want to make to the existing presentation"
+                            rows="15"
+                        ></textarea>
+                        <div class="update-actions">
+                            <button id="process-update-btn" class="primary-button" disabled>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                                Process Updates
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Update Progress Section -->
+                <section id="update-progress-section" class="update-progress-section hidden">
+                    <div class="section-header">
+                        <h2>Processing Updates</h2>
+                    </div>
+                    <div id="update-progress" class="processing-status">
+                        <div class="spinner"></div>
+                        <span id="update-status-text">Processing your updates...</span>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Chart Generation Tab -->
+            <div class="tab-content" id="charts-tab">
+                <!-- Stakeholder Selection -->
+                <section class="chart-stakeholder-section">
+                    <div class="section-header">
+                        <h2>Chart Generation for Stakeholders</h2>
+                        <p class="section-description">Generate AI-powered charts and graphs tailored to your audience</p>
+                    </div>
+                    
+                    <div class="stakeholder-selection">
+                        <label for="chart-stakeholder-select">Target Stakeholder Group:</label>
+                        <select id="chart-stakeholder-select" class="stakeholder-select">
+                            <option value="executive">Executive Leadership</option>
+                            <option value="development">Development Teams</option>
+                            <option value="product">Product Management</option>
+                            <option value="marketing">Marketing & Publishing</option>
+                            <option value="qa">Quality Assurance</option>
+                            <option value="partners">External Partners</option>
+                        </select>
+                        <p class="selection-description">Charts will be optimized for the selected stakeholder group's needs and preferences</p>
+                    </div>
+                </section>
+
+                <!-- Chart Templates -->
+                <section class="chart-templates-section">
+                    <div class="section-header">
+                        <h2>Pre-built Chart Templates</h2>
+                        <p class="section-description">Quick-start templates optimized for your selected stakeholder group</p>
+                    </div>
+                    
+                    <div id="chart-templates-container" class="chart-templates-grid">
+                        <!-- Chart template cards will be inserted here -->
+                    </div>
+                </section>
+
+                <!-- Image Upload Section -->
+                <section class="image-upload-section">
+                    <div class="section-header">
+                        <h2>Upload Your Own Images</h2>
+                        <p class="section-description">Upload custom images, logos, or graphics to include in your presentation</p>
+                    </div>
+                    
+                    <div class="image-upload-container">
+                        <div class="file-drop-zone" id="image-drop-zone">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21,15 16,10 5,21"/>
+                            </svg>
+                            <p>Drop your images here or click to browse</p>
+                            <p class="file-types">Supports: JPG, PNG, GIF, SVG (Max 10MB each)</p>
+                            <input type="file" id="image-file-input" accept="image/*" multiple hidden>
+                            <button class="secondary-button" onclick="document.getElementById('image-file-input').click()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Browse Images
+                            </button>
+                        </div>
+                        
+                        <div id="uploaded-images-preview" class="uploaded-images-preview">
+                            <!-- Uploaded images will appear here -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Custom Visual Generation -->
+                <section class="custom-visual-section">
+                    <div class="section-header">
+                        <h2>Custom Visual Generation</h2>
+                        <p class="section-description">Describe a visual you need, and DALL-E will create it.</p>
+                    </div>
+                    <form id="custom-visual-form" class="custom-visual-form">
+                        <div class="form-group full-width">
+                            <label for="visual-description">Visual Description:</label>
+                            <textarea id="visual-description" name="visual-description" 
+                                placeholder="e.g., A photorealistic image of a diverse team collaborating in a modern office." 
+                                rows="3" required></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="primary-button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                Generate Visual
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- Generated Charts -->
+                <section class="generated-charts-section">
+                    <div class="section-header">
+                        <h2>Generated Charts</h2>
+                        <div class="section-actions">
+                            <button id="clear-all-charts-btn" class="secondary-button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 6h18"/>
+                                    <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                                    <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                                </svg>
+                                Clear All Charts
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="generated-charts-container" class="generated-charts-grid">
+                        <div class="no-charts-message">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="20" x2="12" y2="10"/>
+                                <line x1="18" y1="20" x2="18" y2="4"/>
+                                <line x1="6" y1="20" x2="6" y2="16"/>
+                            </svg>
+                            <h3>No Charts Generated Yet</h3>
+                            <p>Use the templates above or create custom charts to get started</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Slide Assignment Summary -->
+                <section class="slide-assignment-section">
+                    <div class="section-header">
+                        <h2>Slide Assignments</h2>
+                        <p class="section-description">Overview of which charts are assigned to which slides</p>
+                    </div>
+                    
+                    <div id="slide-assignment-container" class="slide-assignment-summary">
+                        <p class="no-assignments">Generate an outline first to see slide assignment options.</p>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Audience Settings Tab -->
+            <div class="tab-content" id="audience-tab">
+                <section class="audience-section">
+                    <div class="section-header">
+                        <h2>Audience Configuration</h2>
+                        <p class="section-description">Customize your presentation for specific stakeholders in game development</p>
+                    </div>
+                    
+                    <div class="audience-grid">
+                        <!-- Executive Leadership -->
+                        <div class="audience-card" data-audience="executive">
+                            <div class="audience-header">
+                                <div class="audience-icon executive">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                </div>
+                                <h3>Executive Leadership</h3>
+                                <input type="checkbox" class="audience-checkbox" id="exec-checkbox">
+                            </div>
+                            <p>CEOs, VPs, Studio Heads - Focus on high-level strategy, ROI, and business impact</p>
+                            <div class="audience-details">
+                                <strong>Key Focus:</strong> Business metrics, market impact, strategic alignment
+                            </div>
+                        </div>
+
+                        <!-- Development Teams -->
+                        <div class="audience-card" data-audience="development">
+                            <div class="audience-header">
+                                <div class="audience-icon development">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="16 18 22 12 16 6"/>
+                                        <polyline points="8 6 2 12 8 18"/>
+                                    </svg>
+                                </div>
+                                <h3>Development Teams</h3>
+                                <input type="checkbox" class="audience-checkbox" id="dev-checkbox">
+                            </div>
+                            <p>Engineers, Designers, Artists - Technical implementation and creative details</p>
+                            <div class="audience-details">
+                                <strong>Key Focus:</strong> Technical specifications, workflows, implementation details
+                            </div>
+                        </div>
+
+                        <!-- Product Management -->
+                        <div class="audience-card" data-audience="product">
+                            <div class="audience-header">
+                                <div class="audience-icon product">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                    </svg>
+                                </div>
+                                <h3>Product Management</h3>
+                                <input type="checkbox" class="audience-checkbox" id="product-checkbox">
+                            </div>
+                            <p>Product Managers, Producers - Feature roadmaps, user experience, market fit</p>
+                            <div class="audience-details">
+                                <strong>Key Focus:</strong> User experience, feature prioritization, market analysis
+                            </div>
+                        </div>
+
+                        <!-- Marketing & Publishing -->
+                        <div class="audience-card" data-audience="marketing">
+                            <div class="audience-header">
+                                <div class="audience-icon marketing">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/>
+                                        <path d="M13 13l6 6"/>
+                                    </svg>
+                                </div>
+                                <h3>Marketing & Publishing</h3>
+                                <input type="checkbox" class="audience-checkbox" id="marketing-checkbox">
+                            </div>
+                            <p>Marketing Teams, Publishers - Brand positioning, audience reach, campaign strategy</p>
+                            <div class="audience-details">
+                                <strong>Key Focus:</strong> Market positioning, audience demographics, promotional strategy
+                            </div>
+                        </div>
+
+                        <!-- Quality Assurance -->
+                        <div class="audience-card" data-audience="qa">
+                            <div class="audience-header">
+                                <div class="audience-icon qa">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 12l2 2 4-4"/>
+                                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"/>
+                                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"/>
+                                        <path d="M12 3c0 1-1 3-3 3s-3-2-3-3 1-3 3-3 3 2 3 3"/>
+                                        <path d="M12 21c0-1 1-3 3-3s3 2 3 3-1 3-3 3-3-2-3-3"/>
+                                    </svg>
+                                </div>
+                                <h3>Quality Assurance</h3>
+                                <input type="checkbox" class="audience-checkbox" id="qa-checkbox">
+                            </div>
+                            <p>QA Teams, Test Engineers - Testing strategies, quality metrics, bug tracking</p>
+                            <div class="audience-details">
+                                <strong>Key Focus:</strong> Testing methodologies, quality standards, risk assessment
+                            </div>
+                        </div>
+
+                        <!-- External Partners -->
+                        <div class="audience-card" data-audience="partners">
+                            <div class="audience-header">
+                                <div class="audience-icon partners">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                                    </svg>
+                                </div>
+                                <h3>External Partners</h3>
+                                <input type="checkbox" class="audience-checkbox" id="partners-checkbox">
+                            </div>
+                            <p>Publishers, Investors, Platform Holders - Partnership opportunities and requirements</p>
+                            <div class="audience-details">
+                                <strong>Key Focus:</strong> Partnership benefits, compliance requirements, mutual value
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="audience-actions">
+                        <button id="save-audience-settings" class="primary-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17,21 17,13 7,13 7,21"/>
+                                <polyline points="7,3 7,8 15,8"/>
+                            </svg>
+                            Save Audience Settings
+                        </button>
+                        <button id="reset-audience-settings" class="secondary-button">
+                            Reset to Default
+                        </button>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Configuration Tab -->
+            <div class="tab-content" id="config-tab">
+                <section class="config-section">
+                    <div class="section-header">
+                        <h2>Application Configuration</h2>
+                        <p class="section-description">Customize AI models and application settings</p>
+                    </div>
+                    
+                    <!-- Gateway URL Selection -->
+                    <div class="config-group">
+                        <h3 class="config-group-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                <line x1="12" y1="22.08" x2="12" y2="12"/>
+                            </svg>
+                            Gateway URL Selection
+                        </h3>
+                        <p class="config-description">Choose the AI gateway endpoint for API requests</p>
+                        
+                        <div class="gateway-selection">
+                            <label for="gateway-url-select">AI Gateway:</label>
+                            <select id="gateway-url-select" class="gateway-select">
+                                <option value="">Loading gateways...</option>
+                            </select>
+                            <p class="setting-description">Select which PlayStation AI Gateway endpoint to use for API requests</p>
+                        </div>
+                    </div>
+
+                    <!-- AI Model Selection -->
+                    <div class="config-group">
+                        <h3 class="config-group-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M12 1v6m0 6v6"/>
+                                <path d="m21 12-6-3-6 3-6-3"/>
+                            </svg>
+                            AI Model Selection
+                        </h3>
+                        <p class="config-description">Choose the AI model for generating slide outlines and processing content</p>
+                        
+                        <div class="model-grid">
+                            <!-- GPT-4o -->
+                            <div class="model-card" data-model="gpt-4o">
+                                <div class="model-header">
+                                    <div class="model-icon gpt">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M9.26 13a2 2 0 0 1 0-2l7.5-7.5a2 2 0 0 1 2.83 0l.42.42a2 2 0 0 1 0 2.83L12.5 14.26a2 2 0 0 1-2 0z"/>
+                                            <path d="M14.5 17.5L4.5 7.5"/>
+                                            <path d="M16 2l6 6"/>
+                                        </svg>
+                                    </div>
+                                    <div class="model-info">
+                                        <h4>GPT-4o</h4>
+                                        <span class="model-badge recommended">Recommended</span>
+                                    </div>
+                                    <input type="radio" name="ai-model" value="gpt-4o" class="model-radio" checked>
+                                </div>
+                                <p class="model-description">Latest GPT-4 model with improved reasoning and creativity. Best for complex presentations.</p>
+                                <div class="model-specs">
+                                    <span class="spec-item">
+                                        <strong>Context:</strong> 128K tokens
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Speed:</strong> Fast
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Quality:</strong> Excellent
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- GPT-4o Mini -->
+                            <div class="model-card" data-model="gpt-4o-mini">
+                                <div class="model-header">
+                                    <div class="model-icon gpt-mini">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <path d="M8 12l2 2 4-4"/>
+                                        </svg>
+                                    </div>
+                                    <div class="model-info">
+                                        <h4>GPT-4o Mini</h4>
+                                        <span class="model-badge fast">Fast</span>
+                                    </div>
+                                    <input type="radio" name="ai-model" value="gpt-4o-mini" class="model-radio">
+                                </div>
+                                <p class="model-description">Faster, cost-effective version of GPT-4. Good for simple presentations and quick iterations.</p>
+                                <div class="model-specs">
+                                    <span class="spec-item">
+                                        <strong>Context:</strong> 128K tokens
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Speed:</strong> Very Fast
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Quality:</strong> Good
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Claude 3.5 Sonnet -->
+                            <div class="model-card" data-model="anthropic.claude-3.5-sonnet">
+                                <div class="model-header">
+                                    <div class="model-icon claude">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="model-info">
+                                        <h4>Claude 3.5 Sonnet</h4>
+                                        <span class="model-badge premium">Premium</span>
+                                    </div>
+                                    <input type="radio" name="ai-model" value="anthropic.claude-3.5-sonnet" class="model-radio">
+                                </div>
+                                <p class="model-description">Anthropic's most capable model. Excellent for detailed analysis and structured content.</p>
+                                <div class="model-specs">
+                                    <span class="spec-item">
+                                        <strong>Context:</strong> 200K tokens
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Speed:</strong> Medium
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Quality:</strong> Excellent
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Claude 3 Opus -->
+                            <div class="model-card" data-model="anthropic.claude-3-opus">
+                                <div class="model-header">
+                                    <div class="model-icon claude-sonnet">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="model-info">
+                                        <h4>Claude 3 Opus</h4>
+                                        <span class="model-badge balanced">Balanced</span>
+                                    </div>
+                                    <input type="radio" name="ai-model" value="anthropic.claude-3-opus" class="model-radio">
+                                </div>
+                                <p class="model-description">Balanced performance and speed. Good for most presentation generation tasks.</p>
+                                <div class="model-specs">
+                                    <span class="spec-item">
+                                        <strong>Context:</strong> 200K tokens
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Speed:</strong> Fast
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Quality:</strong> Very Good
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- o1 -->
+                            <div class="model-card" data-model="o1">
+                                <div class="model-header">
+                                    <div class="model-icon gemini">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M12 2l2.09 6.26L22 10.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 10.27l7.91-2.01L12 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="model-info">
+                                        <h4>o1</h4>
+                                        <span class="model-badge multimodal">Reasoning</span>
+                                    </div>
+                                    <input type="radio" name="ai-model" value="o1" class="model-radio">
+                                </div>
+                                <p class="model-description">OpenAI's reasoning model with advanced problem-solving capabilities. Great for complex presentations.</p>
+                                <div class="model-specs">
+                                    <span class="spec-item">
+                                        <strong>Context:</strong> 128K tokens
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Speed:</strong> Slow
+                                    </span>
+                                    <span class="spec-item">
+                                        <strong>Quality:</strong> Excellent
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Settings -->
+                    <div class="config-group">
+                        <h3 class="config-group-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                            </svg>
+                            Advanced Settings
+                        </h3>
+                        
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label for="temperature-slider">Creativity Level</label>
+                                <div class="slider-container">
+                                    <input type="range" id="temperature-slider" min="0" max="1" step="0.1" value="0.7" class="slider">
+                                    <div class="slider-labels">
+                                        <span>Conservative</span>
+                                        <span>Balanced</span>
+                                        <span>Creative</span>
+                                    </div>
+                                </div>
+                                <p class="setting-description">Higher values make the AI more creative but less predictable</p>
+                            </div>
+
+                            <div class="setting-item">
+                                <label for="max-tokens-input">Max Response Length</label>
+                                <select id="max-tokens-input" class="setting-select">
+                                    <option value="1000">Short (1,000 tokens)</option>
+                                    <option value="2000" selected>Medium (2,000 tokens)</option>
+                                    <option value="4000">Long (4,000 tokens)</option>
+                                    <option value="8000">Very Long (8,000 tokens)</option>
+                                </select>
+                                <p class="setting-description">Maximum length of AI responses for outline generation</p>
+                            </div>
+
+                            <div class="setting-item">
+                                <label for="timeout-input">Request Timeout</label>
+                                <select id="timeout-input" class="setting-select">
+                                    <option value="30000">30 seconds</option>
+                                    <option value="60000" selected>60 seconds</option>
+                                    <option value="120000">2 minutes</option>
+                                    <option value="300000">5 minutes</option>
+                                </select>
+                                <p class="setting-description">How long to wait for AI responses before timing out</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Connection Test -->
+                    <div class="config-group">
+                        <h3 class="config-group-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            Connection Test
+                        </h3>
+                        <p class="config-description">Test your connection to the AI service</p>
+                        
+                        <div class="test-container">
+                            <button id="test-connection-btn" class="secondary-button">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                    <polyline points="22 4 12 14.01 9 11.01"/>
+                                </svg>
+                                Test Connection
+                            </button>
+                            <div id="connection-status" class="connection-status hidden">
+                                <div class="spinner"></div>
+                                <span id="connection-text">Testing connection...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Save Configuration -->
+                    <div class="config-actions">
+                        <button id="save-config-btn" class="primary-button">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17,21 17,13 7,13 7,21"/>
+                                <polyline points="7,3 7,8 15,8"/>
+                            </svg>
+                            Save Configuration
+                        </button>
+                        <button id="reset-config-btn" class="secondary-button">
+                            Reset to Defaults
+                        </button>
+                        <button id="debug-panel-btn" class="secondary-button" onclick="openDebugPanel()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                            Debug Panel
+                        </button>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/logger.js"></script>
+    <script src="js/config.js"></script>
+    
+    <!-- PptxGenJS Library for PowerPoint generation -->
+    <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
+    
+    <script src="js/services/aiService.js"></script>
+    <script src="js/services/dalleService.js"></script>
+    <script src="js/services/pythonService.js"></script>
+    <script src="js/services/fileService.js"></script>
+    <script src="js/utils/formatters.js"></script>
+    <script src="js/utils/validators.js"></script>
+    <script src="js/components/NotesInput.js"></script>
+    <script src="js/components/AIProcessing.js"></script>
+    <script src="js/components/OutlinePreview.js"></script>
+    <script src="js/components/PowerPointGeneration.js"></script>
+    <script src="js/components/ChartGeneration.js"></script>
+    <script src="js/components/TabManager.js"></script>
+    <script src="js/components/FileUploadManager.js"></script>
+    <script src="js/components/AudienceManager.js"></script>
+    <script src="js/components/ConfigurationManager.js"></script>
+    <script src="js/components/MeetingProcessor.js"></script>
+    <script src="js/debug.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

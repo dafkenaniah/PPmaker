@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerPoint Generation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .test-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .progress {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 PowerPoint Generation Test</h1>
+        <p>This page tests the PowerPoint generation functionality with a sample meeting outline.</p>
+        
+        <div class="test-controls">
+            <button class="test-button" onclick="testServices()">Test Services</button>
+            <button class="test-button" onclick="testPythonScript()">Test Python Script</button>
+            <button class="test-button" onclick="testFullGeneration()">Test Full Generation</button>
+            <button class="test-button" onclick="openDebugPanel()">Open Debug Panel</button>
+            <button class="test-button" onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <!-- Load all the required scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/logger.js"></script>
+    <script src="js/services/aiService.js"></script>
+    <script src="js/services/pythonService.js"></script>
+    <script src="js/services/fileService.js"></script>
+    <script src="js/utils/formatters.js"></script>
+    <script src="js/utils/validators.js"></script>
+
+    <script>
+        // Sample meeting outline for testing
+        const sampleOutline = {
+            slides: [
+                {
+                    slideNumber: 1,
+                    title: "Meeting Summary - Q4 Planning",
+                    content: ["Overview of Q4 objectives", "Key stakeholders present"],
+                    bullets: ["Review Q3 performance", "Set Q4 targets", "Resource allocation"],
+                    presenterNotes: "Welcome everyone and set the agenda",
+                    slideType: "title"
+                },
+                {
+                    slideNumber: 2,
+                    title: "Key Decisions Made",
+                    content: ["Critical decisions from today's meeting"],
+                    bullets: [
+                        "Approved budget increase for marketing",
+                        "New product launch moved to Q1 2024",
+                        "Team restructuring approved"
+                    ],
+                    presenterNotes: "Emphasize the importance of these decisions",
+                    slideType: "content"
+                },
+                {
+                    slideNumber: 3,
+                    title: "Action Items",
+                    content: ["Next steps and responsibilities"],
+                    bullets: [
+                        "John: Finalize marketing budget by Friday",
+                        "Sarah: Update product roadmap",
+                        "Mike: Schedule team meetings"
+                    ],
+                    presenterNotes: "Make sure everyone understands their responsibilities",
+                    slideType: "content"
+                }
+            ],
+            totalSlides: 3,
+            estimatedDuration: "5 minutes",
+            theme: "professional"
+        };
+
+        function logResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('test-results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-result ${type}`;
+            resultDiv.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            resultsDiv.appendChild(resultDiv);
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+            console.log(`[TEST] ${message}`);
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = '';
+        }
+
+        async function testServices() {
+            logResult('Testing service availability...', 'info');
+            
+            const services = [
+                { name: 'pythonService', service: window.pythonService },
+                { name: 'fileService', service: window.fileService },
+                { name: 'aiService', service: window.aiService },
+                { name: 'Formatters', service: window.Formatters },
+                { name: 'Validators', service: window.Validators }
+            ];
+            
+            services.forEach(({ name, service }) => {
+                if (service) {
+                    logResult(`✅ ${name} is available`, 'success');
+                } else {
+                    logResult(`❌ ${name} is NOT available`, 'error');
+                }
+            });
+            
+            logResult('Service availability test completed', 'info');
+        }
+
+        async function testPythonScript() {
+            logResult('Testing Python script generation...', 'info');
+            
+            try {
+                if (!window.pythonService) {
+                    throw new Error('pythonService not available');
+                }
+                
+                logResult('Calling pythonService.generatePythonScript()...', 'progress');
+                const script = await window.pythonService.generatePythonScript(sampleOutline);
+                
+                if (script && script.length > 100) {
+                    logResult(`✅ Python script generated successfully (${script.length} characters)`, 'success');
+                    logResult(`Script preview: ${script.substring(0, 200)}...`, 'info');
+                } else {
+                    logResult('❌ Python script generation failed - empty or invalid script', 'error');
+                }
+                
+            } catch (error) {
+                logResult(`❌ Python script generation failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFullGeneration() {
+            logResult('Testing full PowerPoint generation process...', 'info');
+            
+            try {
+                // Step 1: Test Python script generation
+                logResult('Step 1: Generating Python script...', 'progress');
+                if (!window.pythonService) {
+                    throw new Error('pythonService not available');
+                }
+                
+                const script = await window.pythonService.generatePythonScript(sampleOutline);
+                logResult('✅ Python script generated', 'success');
+                
+                // Step 2: Test Python script execution
+                logResult('Step 2: Executing Python script...', 'progress');
+                const blob = await window.pythonService.executePythonScript(script, sampleOutline);
+                logResult(`✅ Python script executed, blob size: ${blob.size} bytes`, 'success');
+                
+                // Step 3: Test file download
+                logResult('Step 3: Preparing download...', 'progress');
+                if (!window.fileService) {
+                    throw new Error('fileService not available');
+                }
+                
+                const filename = `test_presentation_${Date.now()}.pptx`;
+                const downloadUrl = await window.fileService.downloadPowerPoint(blob, filename);
+                logResult(`✅ Download prepared: ${filename}`, 'success');
+                
+                logResult('🎉 Full PowerPoint generation test PASSED!', 'success');
+                
+            } catch (error) {
+                logResult(`❌ Full generation test FAILED: ${error.message}`, 'error');
+                console.error('Full generation test error:', error);
+            }
+        }
+
+        function openDebugPanel() {
+            logResult('Opening debug panel...', 'info');
+            
+            if (typeof window.openDebugPanel === 'function') {
+                window.openDebugPanel();
+                logResult('✅ Debug panel function called', 'success');
+            } else {
+                logResult('❌ openDebugPanel function not available', 'error');
+            }
+        }
+
+        // Auto-run service test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                logResult('🚀 PowerPoint Generation Test Page Loaded', 'info');
+                testServices();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

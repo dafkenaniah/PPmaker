@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gateway Configuration Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #AFF8D8, #C4FAFF);
+        }
+        
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Gateway Configuration Button Test</h1>
+    
+    <div class="test-container">
+        <h2>Gateway Selection Test</h2>
+        
+        <div class="form-group">
+            <label for="gatewaySelect">Select Gateway URL:</label>
+            <select id="gatewaySelect">
+                <option value="">Loading gateways...</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="modelSelect">Select AI Model:</label>
+            <select id="modelSelect">
+                <option value="">Select a gateway first</option>
+            </select>
+        </div>
+        
+        <button id="testConnectionBtn">Test Connection</button>
+        <button id="loadConfigBtn">Load Configuration</button>
+        <button id="saveConfigBtn">Save Configuration</button>
+        
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>Test Log</h2>
+        <div id="testLog" class="log"></div>
+        <button id="clearLogBtn">Clear Log</button>
+    </div>
+
+    <script>
+        // Import configuration (simulated)
+        const CONFIG = {
+            AI_GATEWAY: {
+                API_KEY: '2mB9wTJI+FcY5o96I8BJHA==c1gxKzpR4jAP19dI7JYlNg==PXQrcTW7+z6+zNUJXu7hAA==S0eFdGgh2Z3OLDfqxXx06Q==',
+                GATEWAYS: {
+                    'https://gateway.ai.studios.playstation.com/openai': {
+                        name: 'PlayStation AI Gateway - OpenAI',
+                        endpoint: '/v1/chat/completions',
+                        authType: 'bearer',
+                        supportedModels: ['gpt-4.1', 'gpt-4.1-mini', 'gpt-4.1-nano', 'o3', 'o4-mini', 'gpt-4o', 'gpt-4o-mini', 'o1', 'o1-mini']
+                    },
+                    'https://gateway.ai.studios.playstation.com/anthropic': {
+                        name: 'PlayStation AI Gateway - Anthropic',
+                        endpoint: '/v1/messages',
+                        authType: 'x-api-key',
+                        supportedModels: ['claude-opus-4-20250514', 'claude-sonnet-4-20250514']
+                    },
+                    'https://gateway.ai.studios.playstation.com/anthropic-oai': {
+                        name: 'PlayStation AI Gateway - Anthropic (OpenAI Compatible)',
+                        endpoint: '/v1/chat/completions',
+                        authType: 'bearer',
+                        supportedModels: ['claude-opus-4-20250514', 'claude-sonnet-4-20250514']
+                    },
+                    'https://gateway.ai.studios.playstation.com/gemini': {
+                        name: 'PlayStation AI Gateway - Gemini Direct',
+                        endpoint: '/v1beta/models/{model}:generateContent',
+                        authType: 'x-goog-api-key',
+                        supportedModels: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
+                    },
+                    'https://gateway.ai.studios.playstation.com/gemini-oai': {
+                        name: 'PlayStation AI Gateway - Gemini (OpenAI Compatible)',
+                        endpoint: '/v1/chat/completions',
+                        authType: 'bearer',
+                        supportedModels: ['gemini-2.5-pro', 'gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-1.5-flash-8b']
+                    }
+                },
+                DEFAULT_GATEWAY: 'https://gateway.ai.studios.playstation.com/openai',
+                DEFAULT_MODEL: 'gpt-4.1',
+                MAX_TOKENS: 2000,
+                TEMPERATURE: 0.7
+            }
+        };
+
+        // DOM elements
+        const gatewaySelect = document.getElementById('gatewaySelect');
+        const modelSelect = document.getElementById('modelSelect');
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const loadConfigBtn = document.getElementById('loadConfigBtn');
+        const saveConfigBtn = document.getElementById('saveConfigBtn');
+        const result = document.getElementById('result');
+        const testLog = document.getElementById('testLog');
+        const clearLogBtn = document.getElementById('clearLogBtn');
+
+        // Logging function
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}\n`;
+            testLog.textContent += logEntry;
+            testLog.scrollTop = testLog.scrollHeight;
+            console.log(logEntry);
+        }
+
+        // Show result function
+        function showResult(message, isSuccess = true) {
+            result.textContent = message;
+            result.className = `result ${isSuccess ? 'success' : 'error'}`;
+            result.style.display = 'block';
+            log(message, isSuccess ? 'success' : 'error');
+        }
+
+        // Initialize gateway dropdown
+        function initializeGateways() {
+            log('Initializing gateway dropdown...');
+            
+            gatewaySelect.innerHTML = '<option value="">Select a gateway...</option>';
+            
+            Object.keys(CONFIG.AI_GATEWAY.GATEWAYS).forEach(url => {
+                const gateway = CONFIG.AI_GATEWAY.GATEWAYS[url];
+                const option = document.createElement('option');
+                option.value = url;
+                option.textContent = gateway.name;
+                gatewaySelect.appendChild(option);
+            });
+            
+            // Set default selection
+            gatewaySelect.value = CONFIG.AI_GATEWAY.DEFAULT_GATEWAY;
+            updateModelDropdown();
+            
+            log(`Loaded ${Object.keys(CONFIG.AI_GATEWAY.GATEWAYS).length} gateways`);
+        }
+
+        // Update model dropdown based on selected gateway
+        function updateModelDropdown() {
+            const selectedGateway = gatewaySelect.value;
+            log(`Updating models for gateway: ${selectedGateway}`);
+            
+            modelSelect.innerHTML = '<option value="">Select a model...</option>';
+            
+            if (selectedGateway && CONFIG.AI_GATEWAY.GATEWAYS[selectedGateway]) {
+                const gateway = CONFIG.AI_GATEWAY.GATEWAYS[selectedGateway];
+                
+                gateway.supportedModels.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    modelSelect.appendChild(option);
+                });
+                
+                // Set default model
+                modelSelect.value = CONFIG.AI_GATEWAY.DEFAULT_MODEL;
+                
+                log(`Loaded ${gateway.supportedModels.length} models for ${gateway.name}`);
+            } else {
+                log('No gateway selected or invalid gateway');
+            }
+        }
+
+        // Test connection function
+        async function testConnection() {
+            const selectedGateway = gatewaySelect.value;
+            const selectedModel = modelSelect.value;
+            
+            if (!selectedGateway || !selectedModel) {
+                showResult('Please select both a gateway and model', false);
+                return;
+            }
+            
+            log(`Testing connection to ${selectedGateway} with model ${selectedModel}`);
+            
+            testConnectionBtn.disabled = true;
+            testConnectionBtn.textContent = 'Testing...';
+            
+            try {
+                const gateway = CONFIG.AI_GATEWAY.GATEWAYS[selectedGateway];
+                
+                // Construct headers
+                const headers = {
+                    'Content-Type': 'application/json'
+                };
+                
+                switch (gateway.authType) {
+                    case 'bearer':
+                        headers['Authorization'] = `Bearer ${CONFIG.AI_GATEWAY.API_KEY}`;
+                        break;
+                    case 'x-api-key':
+                        headers['x-api-key'] = CONFIG.AI_GATEWAY.API_KEY;
+                        break;
+                    case 'x-goog-api-key':
+                        headers['x-goog-api-key'] = CONFIG.AI_GATEWAY.API_KEY;
+                        break;
+                }
+                
+                // Construct endpoint
+                let endpoint = selectedGateway + gateway.endpoint;
+                if (gateway.endpoint.includes('{model}')) {
+                    endpoint = endpoint.replace('{model}', selectedModel);
+                }
+                
+                // Construct request body
+                let requestBody;
+                if (gateway.endpoint.includes('chat/completions')) {
+                    requestBody = {
+                        model: selectedModel,
+                        messages: [{ role: 'user', content: 'Test connection' }],
+                        max_tokens: 10
+                    };
+                } else if (gateway.endpoint.includes('messages')) {
+                    requestBody = {
+                        model: selectedModel,
+                        max_tokens: 10,
+                        messages: [{ role: 'user', content: 'Test connection' }]
+                    };
+                } else if (gateway.endpoint.includes('generateContent')) {
+                    requestBody = {
+                        contents: [{ parts: [{ text: 'Test connection' }] }],
+                        generationConfig: { maxOutputTokens: 10 }
+                    };
+                }
+                
+                log(`Endpoint: ${endpoint}`);
+                log(`Headers: ${JSON.stringify(headers, null, 2)}`);
+                log(`Request body: ${JSON.stringify(requestBody, null, 2)}`);
+                
+                // Simulate API call (would be real fetch in actual app)
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showResult(`✅ Connection test successful!\nGateway: ${gateway.name}\nModel: ${selectedModel}\nEndpoint: ${endpoint}`, true);
+                
+            } catch (error) {
+                log(`Connection test failed: ${error.message}`, 'error');
+                showResult(`❌ Connection test failed: ${error.message}`, false);
+            } finally {
+                testConnectionBtn.disabled = false;
+                testConnectionBtn.textContent = 'Test Connection';
+            }
+        }
+
+        // Load configuration function
+        function loadConfiguration() {
+            log('Loading configuration...');
+            
+            try {
+                // Simulate loading from localStorage or file
+                const savedConfig = {
+                    gateway: CONFIG.AI_GATEWAY.DEFAULT_GATEWAY,
+                    model: CONFIG.AI_GATEWAY.DEFAULT_MODEL
+                };
+                
+                gatewaySelect.value = savedConfig.gateway;
+                updateModelDropdown();
+                modelSelect.value = savedConfig.model;
+                
+                showResult('✅ Configuration loaded successfully!', true);
+            } catch (error) {
+                log(`Failed to load configuration: ${error.message}`, 'error');
+                showResult(`❌ Failed to load configuration: ${error.message}`, false);
+            }
+        }
+
+        // Save configuration function
+        function saveConfiguration() {
+            const selectedGateway = gatewaySelect.value;
+            const selectedModel = modelSelect.value;
+            
+            if (!selectedGateway || !selectedModel) {
+                showResult('Please select both a gateway and model before saving', false);
+                return;
+            }
+            
+            log('Saving configuration...');
+            
+            try {
+                // Simulate saving to localStorage or file
+                const configToSave = {
+                    gateway: selectedGateway,
+                    model: selectedModel,
+                    timestamp: new Date().toISOString()
+                };
+                
+                log(`Saved config: ${JSON.stringify(configToSave, null, 2)}`);
+                showResult('✅ Configuration saved successfully!', true);
+            } catch (error) {
+                log(`Failed to save configuration: ${error.message}`, 'error');
+                showResult(`❌ Failed to save configuration: ${error.message}`, false);
+            }
+        }
+
+        // Clear log function
+        function clearLog() {
+            testLog.textContent = '';
+            log('Log cleared');
+        }
+
+        // Event listeners
+        gatewaySelect.addEventListener('change', updateModelDropdown);
+        testConnectionBtn.addEventListener('click', testConnection);
+        loadConfigBtn.addEventListener('click', loadConfiguration);
+        saveConfigBtn.addEventListener('click', saveConfiguration);
+        clearLogBtn.addEventListener('click', clearLog);
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Page loaded, initializing...');
+            initializeGateways();
+            log('Initialization complete');
+        });
+    </script>
+</body>
+</html>

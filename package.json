@@ -1,0 +1,225 @@
+{
+  "name": "powerpoint-generator",
+  "version": "1.0.0",
+  "description": "AI-Powered PowerPoint Generator with audience targeting and file update capabilities",
+  "main": "electron/main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "electron .",
+    "dev": "concurrently \"npm run start-python\" \"npm run serve\" \"wait-on http://localhost:3001 && cross-env NODE_ENV=development electron .\"",
+    "serve": "http-server . -p 3001 -c-1",
+    "build": "electron-builder",
+    "build-win": "electron-builder --win",
+    "build-mac": "electron-builder --mac",
+    "build-linux": "electron-builder --linux",
+    "pack": "electron-builder --dir",
+    "dist": "npm run build",
+    "dist-complete": "npm run build-win && npm run package-complete",
+    "package-complete": "powershell -Command \"if (Test-Path 'PowerPoint-Generator-Complete') { Remove-Item -Recurse -Force 'PowerPoint-Generator-Complete' -ErrorAction SilentlyContinue }; mkdir 'PowerPoint-Generator-Complete'; Copy-Item -Recurse 'dist/win-unpacked/*' 'PowerPoint-Generator-Complete/'; Copy-Item -Recurse 'python' 'PowerPoint-Generator-Complete/'; Copy-Item -Recurse 'analytics' 'PowerPoint-Generator-Complete/'\"",
+    "postinstall": "electron-builder install-app-deps",
+    "start-python": "cd python && python main.py",
+    "start-analytics": "cd analytics && node server.js",
+    "start-all": "concurrently \"npm run start-python\" \"npm run start-analytics\" \"npm start\"",
+    "clean": "rimraf dist node_modules/.cache",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "powerpoint",
+    "presentation",
+    "ai",
+    "generator",
+    "electron",
+    "desktop",
+    "productivity",
+    "automation",
+    "audience-targeting",
+    "meeting-notes",
+    "chart-generation"
+  ],
+  "author": {
+    "name": "PowerPoint Generator Team",
+    "email": "support@powerpointgenerator.com"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.0.0",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "electron-reload": "^2.0.0-alpha.1",
+    "http-server": "^14.1.1",
+    "rimraf": "^5.0.5",
+    "wait-on": "^7.2.0"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "node-fetch": "^2.7.0"
+  },
+  "build": {
+    "appId": "com.powerpointgenerator.app",
+    "productName": "PowerPoint Generator",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "js/app.js",
+      "js/config.js",
+      "js/logger.js",
+      "js/debug.js",
+      "js/components/AIProcessing.js",
+      "js/components/AudienceManager.js",
+      "js/components/ChartGeneration.js",
+      "js/components/ConfigurationManager.js",
+      "js/components/FileUploadManager.js",
+      "js/components/MeetingProcessor.js",
+      "js/components/NotesInput.js",
+      "js/components/OutlinePreview.js",
+      "js/components/PowerPointGeneration.js",
+      "js/components/TabManager.js",
+      "js/services/aiService.js",
+      "js/services/dalleService.js",
+      "js/services/fileService.js",
+      "js/services/pythonService.js",
+      "js/services/timeSavings.js",
+      "js/utils/formatters.js",
+      "js/utils/validators.js",
+      "electron/**/*",
+      "python/**/*",
+      "analytics/**/*",
+      "package.json",
+      "!node_modules/**/*",
+      "!dist/**/*",
+      "!build/**/*",
+      "!*.md",
+      "!.git*",
+      "!pp ap/**/*",
+      "!test-*.html",
+      "!test-*.js",
+      "!debug-*.html",
+      "!PowerPoint-Generator-*/**/*",
+      "!js/simple-tab-fix.js",
+      "!js/simple-fix.js",
+      "!js/tab-manager-final.js"
+    ],
+    "extraResources": [
+      {
+        "from": "python",
+        "to": "python"
+      },
+      {
+        "from": "analytics",
+        "to": "analytics"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "dir",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "publisherName": "PowerPoint Generator Team",
+      "verifyUpdateCodeSignature": false,
+      "sign": null
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "build/icon.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png",
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "PowerPoint Generator",
+      "include": "build/installer.nsh",
+      "artifactName": "PowerPoint-Generator-Setup-${version}.${ext}",
+      "displayLanguageSelector": false,
+      "installerLanguages": [
+        "en_US"
+      ],
+      "language": "1033"
+    },
+    "dmg": {
+      "title": "PowerPoint Generator",
+      "icon": "build/icon.icns",
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
+    "compression": "maximum",
+    "artifactName": "${productName}-v${version}-${os}-${arch}.${ext}",
+    "publish": null
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/powerpoint-generator/powerpoint-generator-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/powerpoint-generator/powerpoint-generator-app/issues"
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+}

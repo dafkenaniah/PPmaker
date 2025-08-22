@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PowerPoint Generator - Loading</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #AFF8D8 0%, #C4FAFF 25%, #85E3FF 50%, #ACE7FE 75%, #6ED5FF 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .splash-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 350px;
+            width: 90%;
+        }
+
+        .app-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6ED5FF, #2563eb);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        .app-icon svg {
+            width: 40px;
+            height: 40px;
+            color: white;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+
+        .app-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 30px;
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #6ED5FF;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            font-size: 14px;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .version {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .splash-container {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        /* Pulsing effect for the icon */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .app-icon {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-container">
+        <div class="app-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14,2 14,8 20,8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10,9 9,9 8,9"/>
+            </svg>
+        </div>
+        
+        <h1 class="app-title">PowerPoint Generator</h1>
+        <p class="app-subtitle">AI-Powered Presentation Creation</p>
+        
+        <div class="loading-container">
+            <div class="spinner"></div>
+            <div class="loading-text">Loading application...</div>
+        </div>
+    </div>
+    
+    <div class="version">v1.0.0</div>
+
+    <script>
+        // Simple loading text animation
+        const loadingTexts = [
+            'Loading application...',
+            'Initializing components...',
+            'Setting up AI services...',
+            'Preparing interface...',
+            'Almost ready...'
+        ];
+        
+        let currentTextIndex = 0;
+        const loadingTextElement = document.querySelector('.loading-text');
+        
+        function updateLoadingText() {
+            loadingTextElement.textContent = loadingTexts[currentTextIndex];
+            currentTextIndex = (currentTextIndex + 1) % loadingTexts.length;
+        }
+        
+        // Update loading text every 800ms
+        setInterval(updateLoadingText, 800);
+        
+        // Add some visual feedback
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Splash screen loaded');
+        });
+    </script>
+</body>
+</html>
