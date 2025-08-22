@@ -32,6 +32,32 @@ class ChartGeneration {
 
         this.setupEventListeners();
         this.loadChartTemplates();
+        
+        // Check for existing outline on initialization
+        this.checkForExistingOutline();
+    }
+
+    /**
+     * Check for existing outline from other components
+     */
+    checkForExistingOutline() {
+        // Check if there's an outline in the OutlinePreview component
+        if (window.outlinePreview && window.outlinePreview.getCurrentOutline) {
+            const existingOutline = window.outlinePreview.getCurrentOutline();
+            if (existingOutline) {
+                console.log('ChartGeneration: Found existing outline, updating slide assignments');
+                this.setOutline(existingOutline);
+            }
+        }
+        
+        // Also check fileService for saved outline
+        if (window.fileService && window.fileService.getOutline) {
+            const savedOutline = window.fileService.getOutline();
+            if (savedOutline) {
+                console.log('ChartGeneration: Found saved outline, updating slide assignments');
+                this.setOutline(savedOutline);
+            }
+        }
     }
 
     /**

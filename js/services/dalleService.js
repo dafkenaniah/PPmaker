@@ -90,10 +90,10 @@ class DalleService {
     }
 
     /**
-     * Create a placeholder image for chart/visual generation
-     * @param {string} prompt - Image prompt
+     * Create a visual chart placeholder based on chart type
+     * @param {string} prompt - Image prompt (contains chart type and title)
      * @param {string} size - Image size
-     * @returns {Promise<Blob>} - Placeholder image blob
+     * @returns {Promise<Blob>} - Visual chart placeholder blob
      */
     async createPlaceholderImage(prompt, size) {
         const [width, height] = size.split('x').map(Number);
@@ -103,44 +103,23 @@ class DalleService {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         
-        // Create gradient background
-        const gradient = ctx.createLinearGradient(0, 0, width, height);
-        gradient.addColorStop(0, '#4A90E2');
-        gradient.addColorStop(1, '#7B68EE');
-        
-        ctx.fillStyle = gradient;
+        // White background
+        ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
         
-        // Add text
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 24px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        // Determine chart type from prompt
+        let chartType = 'bar-chart';
+        if (prompt.includes('pie chart')) chartType = 'pie-chart';
+        else if (prompt.includes('line graph') || prompt.includes('line chart')) chartType = 'line-chart';
+        else if (prompt.includes('funnel')) chartType = 'funnel';
+        else if (prompt.includes('bar chart')) chartType = 'bar-chart';
         
-        // Wrap text for prompt
-        const maxWidth = width - 40;
-        const words = prompt.split(' ');
-        let line = '';
-        let y = height / 2 - 20;
+        // Extract title from prompt
+        const titleMatch = prompt.match(/titled "([^"]+)"/);
+        const chartTitle = titleMatch ? titleMatch[1] : 'Chart';
         
-        for (let n = 0; n < words.length; n++) {
-            const testLine = line + words[n] + ' ';
-            const metrics = ctx.measureText(testLine);
-            const testWidth = metrics.width;
-            
-            if (testWidth > maxWidth && n > 0) {
-                ctx.fillText(line, width / 2, y);
-                line = words[n] + ' ';
-                y += 30;
-            } else {
-                line = testLine;
-            }
-        }
-        ctx.fillText(line, width / 2, y);
-        
-        // Add placeholder label
-        ctx.font = '16px Arial';
-        ctx.fillText('Chart Placeholder', width / 2, height - 30);
+        // Draw chart based on type
+        this.drawChart(ctx, chartType, chartTitle, width, height);
         
         return new Promise(resolve => {
             canvas.toBlob(resolve, 'image/png');
@@ -148,7 +127,197 @@ class DalleService {
     }
 
     /**
-     * Build DALL-E prompt for chart generation
+     * Draw actual chart visuals
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {string} chartType - Chart type
+     * @param {string} title - Chart title
+     * @param {number} width - Canvas width
+     * @param {number} height - Canvas height
+     */
+    drawChart(ctx, chartType, title, width, height) {
+        const chartArea = {
+            x: 80,
+            y: 80,
+            width: width - 160,
+            height: height - 160
+        };
+
+        // Draw title
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(title, width / 2, 40);
+
+        // Draw chart based on type
+        switch (chartType) {
+            case 'bar-chart':
+                this.drawBarChart(ctx, chartArea);
+                break;
+            case 'pie-chart':
+                this.drawPieChart(ctx, chartArea);
+                break;
+            case 'line-chart':
+                this.drawLineChart(ctx, chartArea);
+                break;
+            case 'funnel':
+                this.drawFunnelChart(ctx, chartArea);
+                break;
+            default:
+                this.drawBarChart(ctx, chartArea);
+        }
+    }
+
+    /**
+     * Draw bar chart
+     */
+    drawBarChart(ctx, area) {
+        const bars = [65, 45, 80, 30, 55]; // Sample data
+        const barWidth = area.width / bars.length * 0.6;
+        const maxValue = Math.max(...bars);
+        
+        // Draw axes
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(area.x, area.y);
+        ctx.lineTo(area.x, area.y + area.height);
+        ctx.lineTo(area.x + area.width, area.y + area.height);
+        ctx.stroke();
+        
+        // Draw bars
+        bars.forEach((value, i) => {
+            const barHeight = (value / maxValue) * area.height * 0.8;
+            const x = area.x + (i * area.width / bars.length) + (area.width / bars.length - barWidth) / 2;
+            const y = area.y + area.height - barHeight;
+            
+            ctx.fillStyle = `hsl(${210 + i * 30}, 70%, 50%)`;
+            ctx.fillRect(x, y, barWidth, barHeight);
+            
+            // Add value labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(value.toString(), x + barWidth / 2, y - 10);
+        });
+    }
+
+    /**
+     * Draw pie chart
+     */
+    drawPieChart(ctx, area) {
+        const data = [30, 25, 20, 15, 10]; // Sample data
+        const total = data.reduce((sum, val) => sum + val, 0);
+        const centerX = area.x + area.width / 2;
+        const centerY = area.y + area.height / 2;
+        const radius = Math.min(area.width, area.height) / 3;
+        
+        let currentAngle = -Math.PI / 2;
+        
+        data.forEach((value, i) => {
+            const sliceAngle = (value / total) * 2 * Math.PI;
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+            ctx.fillStyle = `hsl(${i * 72}, 70%, 50%)`;
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Add percentage labels
+            const labelAngle = currentAngle + sliceAngle / 2;
+            const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+            const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${Math.round((value / total) * 100)}%`, labelX, labelY);
+            
+            currentAngle += sliceAngle;
+        });
+    }
+
+    /**
+     * Draw line chart
+     */
+    drawLineChart(ctx, area) {
+        const data = [20, 35, 30, 45, 60, 50, 70]; // Sample data
+        const maxValue = Math.max(...data);
+        
+        // Draw axes
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(area.x, area.y);
+        ctx.lineTo(area.x, area.y + area.height);
+        ctx.lineTo(area.x + area.width, area.y + area.height);
+        ctx.stroke();
+        
+        // Draw grid lines
+        ctx.strokeStyle = '#eee';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 5; i++) {
+            const y = area.y + (area.height / 5) * i;
+            ctx.beginPath();
+            ctx.moveTo(area.x, y);
+            ctx.lineTo(area.x + area.width, y);
+            ctx.stroke();
+        }
+        
+        // Draw line
+        ctx.strokeStyle = '#007BFF';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        data.forEach((value, i) => {
+            const x = area.x + (i / (data.length - 1)) * area.width;
+            const y = area.y + area.height - (value / maxValue) * area.height * 0.8;
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            
+            // Draw data points
+            ctx.fillStyle = '#007BFF';
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        ctx.stroke();
+    }
+
+    /**
+     * Draw funnel chart
+     */
+    drawFunnelChart(ctx, area) {
+        const stages = ['Awareness', 'Interest', 'Consideration', 'Purchase'];
+        const values = [100, 75, 50, 25]; // Sample conversion percentages
+        
+        stages.forEach((stage, i) => {
+            const stageHeight = area.height / stages.length * 0.8;
+            const y = area.y + i * (area.height / stages.length);
+            const widthRatio = values[i] / 100;
+            const stageWidth = area.width * widthRatio;
+            const x = area.x + (area.width - stageWidth) / 2;
+            
+            // Draw funnel stage
+            ctx.fillStyle = `hsl(${210 - i * 20}, 70%, ${60 - i * 5}%)`;
+            ctx.fillRect(x, y, stageWidth, stageHeight);
+            
+            // Add stage labels
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${stage} (${values[i]}%)`, area.x + area.width / 2, y + stageHeight / 2);
+        });
+    }
+
+    /**
+     * Build DALL-E prompt for chart generation - Focused on actual visual charts
      * @param {string} chartType - Type of chart
      * @param {Object} data - Chart data
      * @param {string} title - Chart title
@@ -158,76 +327,54 @@ class DalleService {
      * @returns {string} - Complete DALL-E prompt
      */
     buildChartPrompt(chartType, data, title, stakeholderGroup, customPrompt, style) {
-        let basePrompt = '';
-        
-        // Chart type specific prompts
-        const chartPrompts = {
-            'bar-chart': 'Create a professional bar chart',
-            'line-chart': 'Create a clean line chart with trend lines',
-            'pie-chart': 'Create a modern pie chart with clear segments',
-            'scatter-plot': 'Create a scatter plot with data points',
-            'area-chart': 'Create an area chart showing data trends',
-            'donut-chart': 'Create a donut chart with center statistics',
-            'stacked-bar': 'Create a stacked bar chart comparing categories',
-            'timeline': 'Create a timeline visualization',
-            'funnel': 'Create a funnel chart showing conversion stages',
-            'gauge': 'Create a gauge/speedometer chart',
-            'heatmap': 'Create a heatmap visualization',
-            'treemap': 'Create a treemap showing hierarchical data'
+        // Create focused prompts for actual visual charts
+        const chartVisuals = {
+            'bar-chart': `A professional vertical bar chart visualization with 4-5 bars of different heights showing data comparison. Clean axis labels, grid lines, and numerical values displayed on top of each bar. Corporate blue color scheme.`,
+            'line-chart': `A clean line graph with data points connected by a smooth trending line. X and Y axis with grid lines, data points marked with circles, and a clear upward or downward trend. Professional blue line color.`,
+            'pie-chart': `A modern pie chart with 4-6 colored segments, each segment clearly labeled with percentages and category names. Clean design with subtle shadows and corporate color palette.`,
+            'scatter-plot': `A scatter plot visualization with data points distributed across X and Y axes. Clear axis labels, grid lines, and data points in different colors to show patterns or correlations.`,
+            'area-chart': `An area chart showing data trends over time with filled area under the curve. Gradient fill from bottom to top, clear axis labels and smooth curved lines.`,
+            'donut-chart': `A modern donut chart with hollow center containing summary statistics. Colored segments with clear labels and percentages, professional color scheme.`,
+            'stacked-bar': `A stacked horizontal bar chart with multiple colored sections in each bar representing different categories. Clear legend and category labels.`,
+            'timeline': `A horizontal timeline visualization with milestone markers, dates, and event descriptions. Clean design with connecting lines and milestone icons.`,
+            'funnel': `A funnel chart visualization showing conversion stages from wide top to narrow bottom. Each stage labeled with conversion rates and stage names. Professional color gradient.`,
+            'gauge': `A gauge/speedometer chart with semicircular design, colored zones (red, yellow, green), and a needle pointing to current value. Clear numerical scale.`,
+            'heatmap': `A grid-based heatmap with colored cells representing data intensity. Color scale from light to dark, with axis labels and legend showing value ranges.`,
+            'treemap': `A treemap visualization with rectangular blocks of different sizes representing data values. Each block labeled and colored according to categories.`
         };
 
-        basePrompt = chartPrompts[chartType] || 'Create a professional data visualization';
+        let visualPrompt = chartVisuals[chartType] || 'A professional data visualization chart';
 
-        // Add title
+        // Add title integration
         if (title) {
-            basePrompt += ` titled "${title}"`;
+            visualPrompt = visualPrompt.replace('chart', `chart titled "${title}"`);
         }
 
-        // Add stakeholder-specific styling
-        const stakeholderStyles = {
-            'executive': 'with executive-level clarity, bold colors, and key metrics prominently displayed. Use corporate blue and gray color scheme.',
-            'development': 'with technical precision, detailed labels, and developer-friendly metrics. Use modern tech colors like blue, green, and orange.',
-            'product': 'with user-focused metrics, clear UX indicators, and product performance data. Use vibrant, user-friendly colors.',
-            'marketing': 'with marketing KPIs, conversion metrics, and brand-aligned colors. Use engaging, brand-focused color palette.',
-            'qa': 'with quality metrics, testing data, and clear pass/fail indicators. Use red, green, and yellow for status indication.',
-            'partners': 'with partnership metrics, collaboration data, and professional presentation. Use neutral, professional colors.'
+        // Add stakeholder-specific color schemes
+        const colorSchemes = {
+            'executive': 'Use corporate colors: navy blue, silver, and white with bold fonts.',
+            'development': 'Use tech colors: blue (#007ACC), green (#28A745), and orange (#FD7E14).',
+            'product': 'Use modern colors: purple (#6F42C1), teal (#20C997), and coral (#FF6B6B).',
+            'marketing': 'Use brand colors: vibrant blue (#007BFF), gold (#FFC107), and red (#DC3545).',
+            'qa': 'Use status colors: green (#28A745) for pass, red (#DC3545) for fail, yellow (#FFC107) for warning.',
+            'partners': 'Use neutral colors: gray (#6C757D), blue (#007BFF), and white with professional styling.'
         };
 
-        if (stakeholderGroup && stakeholderStyles[stakeholderGroup]) {
-            basePrompt += ` ${stakeholderStyles[stakeholderGroup]}`;
+        if (stakeholderGroup && colorSchemes[stakeholderGroup]) {
+            visualPrompt += ` ${colorSchemes[stakeholderGroup]}`;
         }
 
-        // Add data context if provided
-        if (data && typeof data === 'object') {
-            if (data.categories && data.values) {
-                basePrompt += ` showing categories: ${data.categories.join(', ')} with corresponding values: ${data.values.join(', ')}.`;
-            } else if (data.description) {
-                basePrompt += ` representing ${data.description}.`;
-            }
-        }
+        // Add technical specifications for actual chart creation
+        visualPrompt += ` The chart must be a clear data visualization with:
+- Actual chart elements (bars, lines, pie slices, etc.) not just text
+- Professional axis labels and numerical scales
+- Clean typography for labels and titles
+- High contrast for readability
+- White or transparent background
+- No decorative text, just chart title and data labels
+- Photorealistic chart rendering suitable for business presentations`;
 
-        // Add style preferences
-        const stylePrompts = {
-            'professional': 'Use a clean, professional design with clear labels, grid lines, and corporate styling.',
-            'modern': 'Use a modern, minimalist design with bold colors and clean typography.',
-            'colorful': 'Use vibrant, engaging colors with dynamic visual elements.',
-            'minimal': 'Use a minimal design with subtle colors and clean lines.',
-            'dark': 'Use a dark theme with bright accent colors and modern styling.'
-        };
-
-        if (stylePrompts[style]) {
-            basePrompt += ` ${stylePrompts[style]}`;
-        }
-
-        // Add custom prompt if provided
-        if (customPrompt) {
-            basePrompt += ` ${customPrompt}`;
-        }
-
-        // Add technical requirements
-        basePrompt += ' The chart should be high resolution, suitable for presentation slides, with clear readable text and professional formatting. No background, transparent or white background preferred.';
-
-        return basePrompt;
+        return visualPrompt;
     }
 
     /**
