@@ -342,7 +342,7 @@ class FileUploadManager {
     }
 
     /**
-     * Process update request
+     * Process update request - Step 1: Generate outline from AI analysis
      */
     async processUpdate() {
         // Strict duplicate prevention
@@ -362,45 +362,93 @@ class FileUploadManager {
         const updateBtn = document.getElementById('process-update-btn');
         if (updateBtn) {
             updateBtn.disabled = true;
-            updateBtn.textContent = 'Processing...';
+            updateBtn.textContent = 'Analyzing...';
         }
 
         try {
             this.showUpdateProgress();
-            console.log('Starting update process...');
+            console.log('Starting AI analysis process...');
 
             // Extract PowerPoint content
             this.updateProgressStatus('Extracting presentation content...');
             const extractedContent = await this.extractPowerPointContent();
             console.log('Content extracted successfully');
 
-            // Generate update instructions
-            this.updateProgressStatus('Generating update instructions...');
-            const updateInstructions = await this.generateUpdateInstructions(extractedContent, updateNotes);
-            console.log('Update instructions generated');
+            // Generate improved outline using AI
+            this.updateProgressStatus('AI is analyzing your presentation...');
+            const improvedOutline = await this.generateImprovedOutline(extractedContent, updateNotes);
+            console.log('AI analysis completed, outline generated');
 
-            // Create updated PowerPoint
-            this.updateProgressStatus('Creating updated presentation...');
-            const updatedPresentation = await this.createUpdatedPresentation(updateInstructions);
-            console.log('Updated presentation created');
-
-            // Show success and download
-            this.showUpdateSuccess(updatedPresentation);
+            // Show outline for review
+            this.showOutlineForReview(improvedOutline);
+            
             if (window.timeSavingsService) {
-                window.timeSavingsService.trackTimeSaved('update_powerpoint');
+                window.timeSavingsService.trackTimeSaved('ai_analysis');
             }
 
         } catch (error) {
-            console.error('Update processing error:', error);
-            this.showError(`Failed to process updates: ${error.message}`);
+            console.error('AI analysis error:', error);
+            this.showError(`Failed to analyze presentation: ${error.message}`);
         } finally {
             this.isProcessing = false;
             if (updateBtn) {
                 updateBtn.disabled = false;
-                updateBtn.textContent = 'Update Presentation';
+                updateBtn.textContent = 'Analyze & Generate Outline';
             }
             this.hideUpdateProgress();
-            console.log('Update process completed');
+            console.log('AI analysis process completed');
+        }
+    }
+
+    /**
+     * Generate PowerPoint from outline - Step 2
+     */
+    async generateFromOutline() {
+        if (!this.generatedOutline || this.isProcessing) {
+            console.log('No outline available or generation already in progress');
+            return;
+        }
+
+        // Set processing flag immediately and disable button
+        this.isProcessing = true;
+        const generateBtn = document.getElementById('generate-from-outline-btn');
+        if (generateBtn) {
+            generateBtn.disabled = true;
+            generateBtn.textContent = 'Generating...';
+        }
+
+        try {
+            this.showUpdateProgress();
+            console.log('Starting PowerPoint generation from outline...');
+
+            // Use the PowerPoint generation service to create presentation
+            this.updateProgressStatus('Creating PowerPoint from outline...');
+            
+            if (window.powerPointGeneration) {
+                const generatedPresentation = await window.powerPointGeneration.generateFromOutline(this.generatedOutline);
+                console.log('PowerPoint generated successfully');
+                
+                // Show success and download
+                this.showGenerationSuccess(generatedPresentation);
+            } else {
+                throw new Error('PowerPoint generation service not available');
+            }
+            
+            if (window.timeSavingsService) {
+                window.timeSavingsService.trackTimeSaved('powerpoint_generation');
+            }
+
+        } catch (error) {
+            console.error('PowerPoint generation error:', error);
+            this.showError(`Failed to generate PowerPoint: ${error.message}`);
+        } finally {
+            this.isProcessing = false;
+            if (generateBtn) {
+                generateBtn.disabled = false;
+                generateBtn.textContent = 'Generate PowerPoint';
+            }
+            this.hideUpdateProgress();
+            console.log('PowerPoint generation process completed');
         }
     }
 
@@ -419,27 +467,98 @@ class FileUploadManager {
     }
 
     /**
-     * Generate update instructions using AI
-     * @param {Object} content - Extracted content
+     * Generate improved outline using AI analysis
+     * @param {Object} content - Extracted presentation content
      * @param {string} updateNotes - User update notes
-     * @returns {Promise<Object>} Update instructions
+     * @returns {Promise<Object>} Generated outline
      */
-    async generateUpdateInstructions(content, updateNotes) {
+    async generateImprovedOutline(content, updateNotes) {
         try {
-            // Create optimized prompt for AI analysis
-            const aiPrompt = this.buildOptimizedUpdatePrompt(content, updateNotes);
-            
-            // Use AI service to generate enhanced content
+            // Use AI service to analyze and improve presentation
             if (window.aiService) {
-                const aiResponse = await window.aiService.generateContent(aiPrompt);
-                return this.parseAIUpdateResponse(aiResponse, content, updateNotes);
+                const outline = await window.aiService.analyzeAndImprovePresentation(content, updateNotes);
+                this.generatedOutline = outline; // Store for later use
+                return outline;
+            } else {
+                throw new Error('AI service not available');
             }
         } catch (error) {
             console.warn('AI service failed, using fallback method:', error);
+            // Fallback: Create basic outline from existing content
+            return this.generateFallbackOutline(content, updateNotes);
         }
+    }
 
-        // Fallback: Create enhanced instructions without AI
-        return this.generateFallbackInstructions(content, updateNotes);
+    /**
+     * Generate fallback outline when AI is not available
+     * @param {Object} content - Extracted content
+     * @param {string} updateNotes - User update notes
+     * @returns {Object} Fallback outline
+     */
+    generateFallbackOutline(content, updateNotes) {
+        const outline = {
+            title: `${content.title || 'Improved Presentation'} - Enhanced`,
+            theme: 'professional',
+            totalSlides: content.slides.length + 1,
+            estimatedDuration: `${Math.ceil((content.slides.length + 1) * 1.5)} minutes`,
+            slides: []
+        };
+
+        // Add existing slides with improvements
+        content.slides.forEach((slide, index) => {
+            outline.slides.push({
+                slideNumber: index + 1,
+                title: slide.title || `Slide ${index + 1}`,
+                slideType: index === 0 ? 'title' : 'content',
+                bullets: this.extractBulletsFromContent(slide.content),
+                content: [slide.content || 'Content to be enhanced'],
+                presenterNotes: `Enhanced version of original slide ${index + 1}`
+            });
+        });
+
+        // Add new slide based on user instructions
+        outline.slides.push({
+            slideNumber: outline.slides.length + 1,
+            title: this.generateSlideTitle(updateNotes),
+            slideType: 'content',
+            bullets: this.generateBulletsFromNotes(updateNotes),
+            content: [updateNotes],
+            presenterNotes: 'New slide based on user requirements'
+        });
+
+        this.generatedOutline = outline;
+        return outline;
+    }
+
+    /**
+     * Extract bullets from slide content
+     * @param {string} content - Slide content
+     * @returns {Array} Extracted bullets
+     */
+    extractBulletsFromContent(content) {
+        if (!content) return [];
+        
+        const lines = content.split('\n').filter(line => line.trim());
+        return lines.map(line => line.replace(/^[•\-\*]\s*/, '').trim()).slice(0, 4);
+    }
+
+    /**
+     * Generate bullets from user notes
+     * @param {string} notes - User notes
+     * @returns {Array} Generated bullets
+     */
+    generateBulletsFromNotes(notes) {
+        const sentences = notes.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        if (sentences.length > 1) {
+            return sentences.slice(0, 4);
+        } else {
+            return [
+                notes.trim(),
+                'Key considerations and analysis',
+                'Implementation strategies',
+                'Expected outcomes and benefits'
+            ];
+        }
     }
 
     /**
@@ -702,6 +821,131 @@ Generate comprehensive content that addresses the user's request while maintaini
         if (statusText) {
             statusText.textContent = status;
         }
+    }
+
+    /**
+     * Show outline for user review
+     * @param {Object} outline - Generated outline
+     */
+    showOutlineForReview(outline) {
+        const progressSection = document.getElementById('update-progress-section');
+        if (!progressSection) return;
+
+        const outlineDiv = document.createElement('div');
+        outlineDiv.className = 'outline-review';
+        
+        // Create outline display
+        let slidesHtml = outline.slides.map(slide => `
+            <div class="slide-preview">
+                <h4>Slide ${slide.slideNumber}: ${slide.title}</h4>
+                <div class="slide-type">${slide.slideType}</div>
+                <ul>
+                    ${slide.bullets.map(bullet => `<li>${bullet}</li>`).join('')}
+                </ul>
+                ${slide.presenterNotes ? `<p class="presenter-notes"><em>Notes: ${slide.presenterNotes}</em></p>` : ''}
+            </div>
+        `).join('');
+
+        outlineDiv.innerHTML = `
+            <div class="outline-header">
+                <h3>📋 AI Generated Outline</h3>
+                <p><strong>Title:</strong> ${outline.title}</p>
+                <p><strong>Slides:</strong> ${outline.totalSlides} | <strong>Duration:</strong> ${outline.estimatedDuration}</p>
+            </div>
+            <div class="outline-content">
+                ${slidesHtml}
+            </div>
+            <div class="outline-actions">
+                <button id="generate-from-outline-btn" class="generate-button">
+                    🎯 Generate PowerPoint from This Outline
+                </button>
+                <button id="regenerate-outline-btn" class="secondary-button">
+                    🔄 Regenerate Outline
+                </button>
+            </div>
+        `;
+
+        progressSection.innerHTML = '';
+        progressSection.appendChild(outlineDiv);
+
+        // Set up generate button
+        const generateBtn = document.getElementById('generate-from-outline-btn');
+        if (generateBtn) {
+            generateBtn.addEventListener('click', () => {
+                this.generateFromOutline();
+            });
+        }
+
+        // Set up regenerate button
+        const regenerateBtn = document.getElementById('regenerate-outline-btn');
+        if (regenerateBtn) {
+            regenerateBtn.addEventListener('click', () => {
+                this.processUpdate(); // Re-run the analysis
+            });
+        }
+
+        console.log('Outline displayed for review');
+    }
+
+    /**
+     * Show generation success
+     * @param {Blob} presentationBlob - Generated presentation blob
+     */
+    showGenerationSuccess(presentationBlob) {
+        // Create download link
+        const url = URL.createObjectURL(presentationBlob);
+        const fileName = this.uploadedFile.name.replace(/\.(pptx?)/i, '_ai_improved.$1');
+        
+        const downloadLink = document.createElement('a');
+        downloadLink.href = url;
+        downloadLink.download = fileName;
+        downloadLink.textContent = 'Download AI-Improved Presentation';
+        downloadLink.className = 'download-button';
+        downloadLink.style.display = 'none'; // Hide the link initially
+        
+        // Add to DOM temporarily and trigger download
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        
+        // Clean up the temporary link after a short delay
+        setTimeout(() => {
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(url);
+        }, 100);
+        
+        // Create visible download link for manual download if needed
+        const visibleDownloadLink = document.createElement('a');
+        visibleDownloadLink.href = url;
+        visibleDownloadLink.download = fileName;
+        visibleDownloadLink.textContent = 'Download AI-Improved Presentation Again';
+        visibleDownloadLink.className = 'download-button';
+        
+        // Show success message
+        const successDiv = document.createElement('div');
+        successDiv.className = 'generation-success';
+        successDiv.innerHTML = `
+            <div class="success-message">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                <span>🎉 AI-Improved PowerPoint generated successfully! Download should start automatically.</span>
+            </div>
+            <div class="generation-summary">
+                <p><strong>Title:</strong> ${this.generatedOutline?.title || 'Improved Presentation'}</p>
+                <p><strong>Total Slides:</strong> ${this.generatedOutline?.totalSlides || 'Multiple'}</p>
+                <p><strong>Estimated Duration:</strong> ${this.generatedOutline?.estimatedDuration || 'Variable'}</p>
+            </div>
+        `;
+        successDiv.appendChild(visibleDownloadLink);
+        
+        // Insert into progress section
+        const progressSection = document.getElementById('update-progress-section');
+        if (progressSection) {
+            progressSection.innerHTML = '';
+            progressSection.appendChild(successDiv);
+        }
+        
+        console.log('Download triggered for AI-improved presentation:', fileName);
     }
 
     /**

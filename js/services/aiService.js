@@ -58,6 +58,122 @@ class AIService {
     }
 
     /**
+     * Analyze existing PowerPoint and generate improved outline
+     * @param {Object} presentationContent - Extracted presentation content
+     * @param {string} userInstructions - User's improvement instructions
+     * @param {string} model - AI model to use (optional)
+     * @returns {Promise<Object>} - Generated improved slide outline
+     */
+    async analyzeAndImprovePresentation(presentationContent, userInstructions, model = this.defaultModel) {
+        try {
+            const prompt = this.buildPresentationAnalysisPrompt(presentationContent, userInstructions);
+            
+            const response = await this.callAI({
+                model: model,
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: this.maxTokens,
+                temperature: this.temperature
+            });
+
+            // Parse the AI response to extract JSON
+            const content = response.choices[0].message.content;
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            
+            if (!jsonMatch) {
+                throw new Error('Invalid AI response format');
+            }
+
+            const slideOutline = JSON.parse(jsonMatch[0]);
+            
+            // Validate the response structure
+            this.validateSlideOutline(slideOutline);
+            
+            return slideOutline;
+        } catch (error) {
+            console.error('Error analyzing presentation:', error);
+            throw new Error(CONFIG.ERRORS.AI_API_ERROR);
+        }
+    }
+
+    /**
+     * Build optimized prompt for presentation analysis and improvement
+     * @param {Object} presentationContent - Current presentation content
+     * @param {string} userInstructions - User's instructions
+     * @returns {string} - Optimized AI prompt
+     */
+    buildPresentationAnalysisPrompt(presentationContent, userInstructions) {
+        const slideSummary = presentationContent.slides.map(slide => 
+            `Slide ${slide.slide_number}: "${slide.title}"\nContent: ${slide.content.substring(0, 200)}...`
+        ).join('\n\n');
+
+        return `
+TASK: Analyze existing PowerPoint presentation and generate an improved outline
+
+CURRENT PRESENTATION:
+Title: ${presentationContent.title || 'Untitled Presentation'}
+Total Slides: ${presentationContent.slides.length}
+
+EXISTING SLIDES:
+${slideSummary}
+
+USER INSTRUCTIONS: "${userInstructions}"
+
+ANALYSIS REQUIREMENTS:
+1. Review the existing presentation structure and content
+2. Identify strengths and areas for improvement
+3. Consider the user's specific instructions
+4. Generate a comprehensive improved outline that:
+   - Maintains the core message and purpose
+   - Improves flow and structure
+   - Enhances content quality and clarity
+   - Adds relevant information where needed
+   - Removes redundant or weak content
+
+OUTPUT FORMAT - Return ONLY valid JSON in this exact structure:
+{
+  "title": "Improved Presentation Title",
+  "theme": "professional",
+  "totalSlides": 8,
+  "estimatedDuration": "15 minutes",
+  "slides": [
+    {
+      "slideNumber": 1,
+      "title": "Slide Title",
+      "slideType": "title",
+      "bullets": [
+        "Main point 1",
+        "Main point 2",
+        "Main point 3"
+      ],
+      "content": [
+        "Detailed explanation or additional context",
+        "Supporting information",
+        "Key insights"
+      ],
+      "presenterNotes": "Notes for the presenter"
+    }
+  ]
+}
+
+GUIDELINES:
+- Use slideType: "title" for opening slide, "content" for main slides, "conclusion" for closing
+- Include 3-5 bullet points per slide maximum
+- Make bullets actionable and specific
+- Add presenter notes with delivery tips
+- Ensure logical flow between slides
+- Professional, business-appropriate language
+- Create compelling, engaging content
+
+Generate an improved outline that addresses the user's instructions while enhancing the overall presentation quality.
+`;
+    }
+
+    /**
      * Generate Python script for PowerPoint creation
      * @param {Object} slideData - Slide outline data
      * @param {string} model - AI model to use (optional)
