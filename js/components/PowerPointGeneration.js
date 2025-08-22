@@ -157,6 +157,13 @@ class PowerPointGeneration {
         pptx.company = 'PowerPoint Generator';
         pptx.subject = 'Generated Presentation';
         pptx.title = this.currentOutline.slides?.[0]?.title || 'Presentation';
+        
+        // Configure layout settings to work better with themes
+        pptx.layout = 'LAYOUT_16x9'; // Use 16:9 aspect ratio
+        pptx.defineSlideMaster({
+            title: 'Custom Master',
+            bkgd: 'FFFFFF' // White background to avoid theme conflicts
+        });
 
         // Add slides from outline
         this.updateProgress(50, 'Adding slides...');
@@ -170,16 +177,22 @@ class PowerPointGeneration {
             const slideImages = chartAssignments[index] || [];
             const hasImages = slideImages.length > 0;
             
-            // Add title - simple approach for proper spacing
+            // Add title with theme-compatible positioning
             if (slideData.title) {
                 slide.addText(slideData.title, {
-                    x: '5%',
-                    y: '5%', 
-                    w: '90%',
-                    h: '15%',
+                    placeholder: 'title' // Use PowerPoint's title placeholder instead of absolute positioning
+                });
+                
+                // Fallback with safe positioning if placeholder doesn't work
+                slide.addText(slideData.title, {
+                    x: 0.5,  // Use inches instead of percentages for better theme compatibility
+                    y: 0.5,
+                    w: 9.0,
+                    h: 1.0,
                     fontSize: 32,
                     bold: true,
-                    align: 'left'
+                    align: 'left',
+                    color: '333333'
                 });
             }
             
@@ -188,53 +201,70 @@ class PowerPointGeneration {
             const contentWidth = hasImages ? '45%' : '90%';
             const contentHeight = hasImages ? '70%' : '70%';
             
-            // Add content with proper spacing from title
+            // Add content using theme-compatible positioning
             if (slideData.bullets && slideData.bullets.length > 0) {
-                // Add each bullet point as separate text element to avoid PptxGenJS formatting issues
-                slideData.bullets.forEach((bullet, bulletIndex) => {
-                    slide.addText(`• ${bullet}`, {
-                        x: '8%',
-                        y: `${25 + (bulletIndex * 8)}%`,
-                        w: contentWidth,
-                        h: '6%',
-                        fontSize: 20,
-                        align: 'left',
-                        color: '333333'
-                    });
+                // Try using content placeholder first
+                const bulletText = slideData.bullets.map(bullet => `• ${bullet}`).join('\n');
+                slide.addText(bulletText, {
+                    placeholder: 'content' // Use PowerPoint's content placeholder
+                });
+                
+                // Fallback with safe positioning
+                const contentWidthInches = hasImages ? 4.0 : 8.5;
+                slide.addText(bulletText, {
+                    x: 0.75,
+                    y: 2.0,
+                    w: contentWidthInches,
+                    h: 5.5,
+                    fontSize: 18,
+                    align: 'left',
+                    color: '333333',
+                    bullet: true // Enable bullet formatting
                 });
             } else if (slideData.content && slideData.content.length > 0) {
-                // Add content as simple text
+                // Use content placeholder for better theme compatibility
                 slide.addText(slideData.content.join('\n'), {
-                    x: '5%',
-                    y: contentY,
-                    w: contentWidth,
-                    h: contentHeight, 
-                    fontSize: 20,
+                    placeholder: 'content'
+                });
+                
+                // Fallback positioning
+                const contentWidthInches = hasImages ? 4.0 : 8.5;
+                slide.addText(slideData.content.join('\n'), {
+                    x: 0.75,
+                    y: 2.0,
+                    w: contentWidthInches,
+                    h: 5.5,
+                    fontSize: 18,
                     align: 'left',
                     color: '333333'
                 });
             }
             
-            // Add assigned images/charts to the slide
-            if (hasImages) {
-                slideImages.forEach((imageData, imgIndex) => {
-                    try {
-                        // Add image to the right side of the slide
-                        const imageY = 25 + (imgIndex * 35); // Stack images vertically
-                        slide.addImage({
-                            data: imageData.blob,
-                            x: '55%',
-                            y: `${imageY}%`,
-                            w: '40%',
-                            h: '30%'
-                        });
-                        
-                        console.log(`Added image "${imageData.title}" to slide ${index + 1}`);
-                    } catch (error) {
-                        console.warn(`Failed to add image to slide ${index + 1}:`, error);
-                    }
-                });
-            }
+                // Add assigned images/charts to the slide with theme-safe positioning
+                if (hasImages) {
+                    slideImages.forEach((imageData, imgIndex) => {
+                        try {
+                            // Position images using inches for better theme compatibility
+                            const imageY = 2.0 + (imgIndex * 2.5); // Stack images vertically
+                            slide.addImage({
+                                data: imageData.blob,
+                                x: 5.5,  // Position in inches from left
+                                y: imageY,
+                                w: 3.5,  // Width in inches
+                                h: 2.0,  // Height in inches
+                                sizing: {
+                                    type: 'contain', // Maintain aspect ratio
+                                    w: 3.5,
+                                    h: 2.0
+                                }
+                            });
+                            
+                            console.log(`Added image "${imageData.title}" to slide ${index + 1} at position (${5.5}, ${imageY})`);
+                        } catch (error) {
+                            console.warn(`Failed to add image to slide ${index + 1}:`, error);
+                        }
+                    });
+                }
             
             // Build comprehensive presenter notes with context
             let presenterNotes = '';
@@ -604,62 +634,82 @@ class PowerPointGeneration {
                 const slideImages = chartAssignments[index] || [];
                 const hasImages = slideImages.length > 0;
                 
-                // Add title
+                // Add title with theme-compatible positioning
                 if (slideData.title) {
                     slide.addText(slideData.title, {
-                        x: '5%',
-                        y: '5%', 
-                        w: '90%',
-                        h: '15%',
+                        placeholder: 'title' // Use PowerPoint's title placeholder
+                    });
+                    
+                    // Fallback with theme-safe positioning
+                    slide.addText(slideData.title, {
+                        x: 0.5,
+                        y: 0.5,
+                        w: 9.0,
+                        h: 1.0,
                         fontSize: 32,
                         bold: true,
-                        align: 'left'
-                    });
-                }
-                
-                // Calculate content area based on whether images are present
-                const contentWidth = hasImages ? '45%' : '85%';
-                
-                // Add content
-                if (slideData.bullets && slideData.bullets.length > 0) {
-                    slideData.bullets.forEach((bullet, bulletIndex) => {
-                        slide.addText(`• ${bullet}`, {
-                            x: '8%',
-                            y: `${25 + (bulletIndex * 8)}%`,
-                            w: contentWidth,
-                            h: '6%',
-                            fontSize: 20,
-                            align: 'left',
-                            color: '333333'
-                        });
-                    });
-                } else if (slideData.content && slideData.content.length > 0) {
-                    slide.addText(slideData.content.join('\n'), {
-                        x: '5%',
-                        y: '25%',
-                        w: contentWidth,
-                        h: '70%', 
-                        fontSize: 20,
                         align: 'left',
                         color: '333333'
                     });
                 }
                 
-                // Add assigned images/charts to the slide
+                // Add content using theme-compatible positioning
+                if (slideData.bullets && slideData.bullets.length > 0) {
+                    const bulletText = slideData.bullets.map(bullet => `• ${bullet}`).join('\n');
+                    slide.addText(bulletText, {
+                        placeholder: 'content' // Use PowerPoint's content placeholder
+                    });
+                    
+                    // Fallback with theme-safe positioning
+                    const contentWidthInches = hasImages ? 4.0 : 8.5;
+                    slide.addText(bulletText, {
+                        x: 0.75,
+                        y: 2.0,
+                        w: contentWidthInches,
+                        h: 5.5,
+                        fontSize: 18,
+                        align: 'left',
+                        color: '333333',
+                        bullet: true
+                    });
+                } else if (slideData.content && slideData.content.length > 0) {
+                    slide.addText(slideData.content.join('\n'), {
+                        placeholder: 'content'
+                    });
+                    
+                    // Fallback positioning
+                    const contentWidthInches = hasImages ? 4.0 : 8.5;
+                    slide.addText(slideData.content.join('\n'), {
+                        x: 0.75,
+                        y: 2.0,
+                        w: contentWidthInches,
+                        h: 5.5,
+                        fontSize: 18,
+                        align: 'left',
+                        color: '333333'
+                    });
+                }
+                
+                // Add assigned images/charts with theme-safe positioning
                 if (hasImages) {
                     slideImages.forEach((imageData, imgIndex) => {
                         try {
-                            // Add image to the right side of the slide
-                            const imageY = 25 + (imgIndex * 35); // Stack images vertically
+                            // Position images using inches for better theme compatibility
+                            const imageY = 2.0 + (imgIndex * 2.5);
                             slide.addImage({
                                 data: imageData.blob,
-                                x: '55%',
-                                y: `${imageY}%`,
-                                w: '40%',
-                                h: '30%'
+                                x: 5.5,
+                                y: imageY,
+                                w: 3.5,
+                                h: 2.0,
+                                sizing: {
+                                    type: 'contain',
+                                    w: 3.5,
+                                    h: 2.0
+                                }
                             });
                             
-                            console.log(`Added image "${imageData.title}" to slide ${index + 1}`);
+                            console.log(`Added image "${imageData.title}" to slide ${index + 1} at position (${5.5}, ${imageY})`);
                         } catch (error) {
                             console.warn(`Failed to add image to slide ${index + 1}:`, error);
                         }
