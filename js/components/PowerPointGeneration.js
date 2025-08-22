@@ -166,6 +166,10 @@ class PowerPointGeneration {
             // Create slide - let PptxGenJS handle layout automatically
             const slide = pptx.addSlide();
             
+            // Check if this slide has assigned images/charts
+            const slideImages = chartAssignments[index] || [];
+            const hasImages = slideImages.length > 0;
+            
             // Add title - simple approach for proper spacing
             if (slideData.title) {
                 slide.addText(slideData.title, {
@@ -179,6 +183,11 @@ class PowerPointGeneration {
                 });
             }
             
+            // Calculate content area based on whether images are present
+            const contentY = hasImages ? '25%' : '25%';
+            const contentWidth = hasImages ? '45%' : '90%';
+            const contentHeight = hasImages ? '70%' : '70%';
+            
             // Add content with proper spacing from title
             if (slideData.bullets && slideData.bullets.length > 0) {
                 // Add each bullet point as separate text element to avoid PptxGenJS formatting issues
@@ -186,7 +195,7 @@ class PowerPointGeneration {
                     slide.addText(`• ${bullet}`, {
                         x: '8%',
                         y: `${25 + (bulletIndex * 8)}%`,
-                        w: '85%',
+                        w: contentWidth,
                         h: '6%',
                         fontSize: 20,
                         align: 'left',
@@ -197,12 +206,33 @@ class PowerPointGeneration {
                 // Add content as simple text
                 slide.addText(slideData.content.join('\n'), {
                     x: '5%',
-                    y: '25%',
-                    w: '90%',
-                    h: '70%', 
+                    y: contentY,
+                    w: contentWidth,
+                    h: contentHeight, 
                     fontSize: 20,
                     align: 'left',
                     color: '333333'
+                });
+            }
+            
+            // Add assigned images/charts to the slide
+            if (hasImages) {
+                slideImages.forEach((imageData, imgIndex) => {
+                    try {
+                        // Add image to the right side of the slide
+                        const imageY = 25 + (imgIndex * 35); // Stack images vertically
+                        slide.addImage({
+                            data: imageData.blob,
+                            x: '55%',
+                            y: `${imageY}%`,
+                            w: '40%',
+                            h: '30%'
+                        });
+                        
+                        console.log(`Added image "${imageData.title}" to slide ${index + 1}`);
+                    } catch (error) {
+                        console.warn(`Failed to add image to slide ${index + 1}:`, error);
+                    }
                 });
             }
             
@@ -560,12 +590,19 @@ class PowerPointGeneration {
             pptx.subject = 'Generated Presentation';
             pptx.title = outline.title || outline.slides[0]?.title || 'Presentation';
 
+            // Get chart assignments for this outline
+            const chartAssignments = window.chartGeneration ? window.chartGeneration.exportForPowerPoint() : {};
+
             // Add slides from outline
             outline.slides.forEach((slideData, index) => {
                 console.log(`[PowerPointGeneration] Creating slide ${index + 1}: ${slideData.title}`);
                 
                 // Create slide
                 const slide = pptx.addSlide();
+                
+                // Check if this slide has assigned images/charts
+                const slideImages = chartAssignments[index] || [];
+                const hasImages = slideImages.length > 0;
                 
                 // Add title
                 if (slideData.title) {
@@ -580,13 +617,16 @@ class PowerPointGeneration {
                     });
                 }
                 
+                // Calculate content area based on whether images are present
+                const contentWidth = hasImages ? '45%' : '85%';
+                
                 // Add content
                 if (slideData.bullets && slideData.bullets.length > 0) {
                     slideData.bullets.forEach((bullet, bulletIndex) => {
                         slide.addText(`• ${bullet}`, {
                             x: '8%',
                             y: `${25 + (bulletIndex * 8)}%`,
-                            w: '85%',
+                            w: contentWidth,
                             h: '6%',
                             fontSize: 20,
                             align: 'left',
@@ -597,11 +637,32 @@ class PowerPointGeneration {
                     slide.addText(slideData.content.join('\n'), {
                         x: '5%',
                         y: '25%',
-                        w: '90%',
+                        w: contentWidth,
                         h: '70%', 
                         fontSize: 20,
                         align: 'left',
                         color: '333333'
+                    });
+                }
+                
+                // Add assigned images/charts to the slide
+                if (hasImages) {
+                    slideImages.forEach((imageData, imgIndex) => {
+                        try {
+                            // Add image to the right side of the slide
+                            const imageY = 25 + (imgIndex * 35); // Stack images vertically
+                            slide.addImage({
+                                data: imageData.blob,
+                                x: '55%',
+                                y: `${imageY}%`,
+                                w: '40%',
+                                h: '30%'
+                            });
+                            
+                            console.log(`Added image "${imageData.title}" to slide ${index + 1}`);
+                        } catch (error) {
+                            console.warn(`Failed to add image to slide ${index + 1}:`, error);
+                        }
                     });
                 }
                 
