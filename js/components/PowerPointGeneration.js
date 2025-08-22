@@ -515,6 +515,12 @@ class PowerPointGeneration {
     updateButtonState() {
         if (this.isGenerating) return;
         
+        // Add null check to prevent errors during initialization
+        if (!this.createButton) {
+            console.warn('[PowerPointGeneration] createButton not found, skipping button state update');
+            return;
+        }
+        
         const hasOutline = this.currentOutline && this.currentOutline.slides && this.currentOutline.slides.length > 0;
         
         this.createButton.disabled = !hasOutline;
