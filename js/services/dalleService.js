@@ -127,7 +127,7 @@ class DalleService {
     }
 
     /**
-     * Draw actual chart visuals
+     * Draw actual chart visuals with contextual data
      * @param {CanvasRenderingContext2D} ctx - Canvas context
      * @param {string} chartType - Chart type
      * @param {string} title - Chart title
@@ -136,35 +136,498 @@ class DalleService {
      */
     drawChart(ctx, chartType, title, width, height) {
         const chartArea = {
-            x: 80,
-            y: 80,
-            width: width - 160,
-            height: height - 160
+            x: 100,
+            y: 100,
+            width: width - 200,
+            height: height - 200
         };
 
         // Draw title
         ctx.fillStyle = '#333';
-        ctx.font = 'bold 24px Arial';
+        ctx.font = 'bold 28px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(title, width / 2, 40);
+        ctx.fillText(title, width / 2, 50);
 
-        // Draw chart based on type
+        // Get contextual data based on chart type and title
+        const chartData = this.getContextualChartData(chartType, title);
+
+        // Draw chart based on type with contextual data
         switch (chartType) {
             case 'bar-chart':
-                this.drawBarChart(ctx, chartArea);
+                this.drawContextualBarChart(ctx, chartArea, chartData, width);
                 break;
             case 'pie-chart':
-                this.drawPieChart(ctx, chartArea);
+                this.drawContextualPieChart(ctx, chartArea, chartData, width);
                 break;
             case 'line-chart':
-                this.drawLineChart(ctx, chartArea);
+                this.drawContextualLineChart(ctx, chartArea, chartData, width);
                 break;
             case 'funnel':
-                this.drawFunnelChart(ctx, chartArea);
+                this.drawContextualFunnelChart(ctx, chartArea, chartData);
                 break;
             default:
-                this.drawBarChart(ctx, chartArea);
+                this.drawContextualBarChart(ctx, chartArea, chartData, width);
         }
+    }
+
+    /**
+     * Get contextual data based on chart type and title
+     * @param {string} chartType - Chart type
+     * @param {string} title - Chart title
+     * @returns {Object} - Contextual chart data
+     */
+    getContextualChartData(chartType, title) {
+        const titleLower = title.toLowerCase();
+        
+        // Revenue/Financial charts
+        if (titleLower.includes('revenue') || titleLower.includes('growth')) {
+            return {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                values: [2.1, 2.8, 3.2, 3.9],
+                units: 'M',
+                currency: '$',
+                colors: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+            };
+        }
+        
+        // Market Share charts
+        if (titleLower.includes('market') || titleLower.includes('share')) {
+            return {
+                labels: ['Our Product', 'Competitor A', 'Competitor B', 'Others'],
+                values: [35, 28, 22, 15],
+                units: '%',
+                colors: ['#2ca02c', '#ff7f0e', '#d62728', '#9467bd']
+            };
+        }
+        
+        // KPI/Performance charts
+        if (titleLower.includes('kpi') || titleLower.includes('performance')) {
+            return {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                values: [78, 82, 85, 79, 88, 92],
+                units: '%',
+                colors: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b']
+            };
+        }
+        
+        // Sales Funnel
+        if (titleLower.includes('funnel') || titleLower.includes('conversion')) {
+            return {
+                labels: ['Awareness', 'Interest', 'Consideration', 'Purchase'],
+                values: [100, 65, 35, 18],
+                units: '%',
+                colors: ['#2ca02c', '#ff7f0e', '#d62728', '#9467bd']
+            };
+        }
+        
+        // Bug/Quality charts
+        if (titleLower.includes('bug') || titleLower.includes('quality')) {
+            return {
+                labels: ['Critical', 'Major', 'Minor', 'Enhancement'],
+                values: [5, 23, 45, 27],
+                units: '',
+                colors: ['#d62728', '#ff7f0e', '#2ca02c', '#1f77b4']
+            };
+        }
+        
+        // Default business data
+        return {
+            labels: ['Category A', 'Category B', 'Category C', 'Category D'],
+            values: [45, 32, 28, 15],
+            units: '',
+            colors: ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+        };
+    }
+
+    /**
+     * Draw bar chart
+     */
+    drawBarChart(ctx, area) {
+        const bars = [65, 45, 80, 30, 55]; // Sample data
+        const barWidth = area.width / bars.length * 0.6;
+        const maxValue = Math.max(...bars);
+        
+        // Draw axes
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(area.x, area.y);
+        ctx.lineTo(area.x, area.y + area.height);
+        ctx.lineTo(area.x + area.width, area.y + area.height);
+        ctx.stroke();
+        
+        // Draw bars
+        bars.forEach((value, i) => {
+            const barHeight = (value / maxValue) * area.height * 0.8;
+            const x = area.x + (i * area.width / bars.length) + (area.width / bars.length - barWidth) / 2;
+            const y = area.y + area.height - barHeight;
+            
+            ctx.fillStyle = `hsl(${210 + i * 30}, 70%, 50%)`;
+            ctx.fillRect(x, y, barWidth, barHeight);
+            
+            // Add value labels
+            ctx.fillStyle = '#333';
+            ctx.font = '14px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(value.toString(), x + barWidth / 2, y - 10);
+        });
+    }
+
+    /**
+     * Draw pie chart
+     */
+    drawPieChart(ctx, area) {
+        const data = [30, 25, 20, 15, 10]; // Sample data
+        const total = data.reduce((sum, val) => sum + val, 0);
+        const centerX = area.x + area.width / 2;
+        const centerY = area.y + area.height / 2;
+        const radius = Math.min(area.width, area.height) / 3;
+        
+        let currentAngle = -Math.PI / 2;
+        
+        data.forEach((value, i) => {
+            const sliceAngle = (value / total) * 2 * Math.PI;
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+            ctx.fillStyle = `hsl(${i * 72}, 70%, 50%)`;
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Add percentage labels
+            const labelAngle = currentAngle + sliceAngle / 2;
+            const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+            const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${Math.round((value / total) * 100)}%`, labelX, labelY);
+            
+            currentAngle += sliceAngle;
+        });
+    }
+
+    /**
+     * Draw line chart
+     */
+    drawLineChart(ctx, area) {
+        const data = [20, 35, 30, 45, 60, 50, 70]; // Sample data
+        const maxValue = Math.max(...data);
+        
+        // Draw axes
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(area.x, area.y);
+        ctx.lineTo(area.x, area.y + area.height);
+        ctx.lineTo(area.x + area.width, area.y + area.height);
+        ctx.stroke();
+        
+        // Draw grid lines
+        ctx.strokeStyle = '#eee';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 5; i++) {
+            const y = area.y + (area.height / 5) * i;
+            ctx.beginPath();
+            ctx.moveTo(area.x, y);
+            ctx.lineTo(area.x + area.width, y);
+            ctx.stroke();
+        }
+        
+        // Draw line
+        ctx.strokeStyle = '#007BFF';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        data.forEach((value, i) => {
+            const x = area.x + (i / (data.length - 1)) * area.width;
+            const y = area.y + area.height - (value / maxValue) * area.height * 0.8;
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            
+            // Draw data points
+            ctx.fillStyle = '#007BFF';
+            ctx.beginPath();
+            ctx.arc(x, y, 4, 0, 2 * Math.PI);
+            ctx.fill();
+        });
+        ctx.stroke();
+    }
+
+    /**
+     * Draw contextual bar chart with proper labels and legend
+     */
+    drawContextualBarChart(ctx, area, data, canvasWidth) {
+        const barWidth = area.width / data.labels.length * 0.6;
+        const maxValue = Math.max(...data.values);
+        
+        // Draw axes
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(area.x, area.y);
+        ctx.lineTo(area.x, area.y + area.height);
+        ctx.lineTo(area.x + area.width, area.y + area.height);
+        ctx.stroke();
+        
+        // Draw Y-axis labels
+        ctx.fillStyle = '#666';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 5; i++) {
+            const value = (maxValue / 5) * i;
+            const y = area.y + area.height - (i / 5) * area.height;
+            const displayValue = data.currency ? 
+                `${data.currency}${value.toFixed(1)}${data.units}` : 
+                `${value.toFixed(1)}${data.units}`;
+            ctx.fillText(displayValue, area.x - 10, y + 4);
+        }
+        
+        // Draw bars with contextual data
+        data.values.forEach((value, i) => {
+            const barHeight = (value / maxValue) * area.height * 0.8;
+            const x = area.x + (i * area.width / data.labels.length) + (area.width / data.labels.length - barWidth) / 2;
+            const y = area.y + area.height - barHeight;
+            
+            ctx.fillStyle = data.colors[i] || `hsl(${210 + i * 30}, 70%, 50%)`;
+            ctx.fillRect(x, y, barWidth, barHeight);
+            
+            // Add value labels on bars
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            const displayValue = data.currency ? 
+                `${data.currency}${value}${data.units}` : 
+                `${value}${data.units}`;
+            ctx.fillText(displayValue, x + barWidth / 2, y - 10);
+            
+            // Add category labels
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.save();
+            ctx.translate(x + barWidth / 2, area.y + area.height + 20);
+            ctx.rotate(-Math.PI / 6);
+            ctx.fillText(data.labels[i], 0, 0);
+            ctx.restore();
+        });
+        
+        // Draw legend
+        this.drawLegend(ctx, data, canvasWidth - 180, 100);
+    }
+
+    /**
+     * Draw contextual pie chart with proper labels and legend
+     */
+    drawContextualPieChart(ctx, area, data, canvasWidth) {
+        const total = data.values.reduce((sum, val) => sum + val, 0);
+        const centerX = area.x + area.width / 2;
+        const centerY = area.y + area.height / 2;
+        const radius = Math.min(area.width, area.height) / 3;
+        
+        let currentAngle = -Math.PI / 2;
+        
+        data.values.forEach((value, i) => {
+            const sliceAngle = (value / total) * 2 * Math.PI;
+            
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, radius, currentAngle, currentAngle + sliceAngle);
+            ctx.fillStyle = data.colors[i] || `hsl(${i * 72}, 70%, 50%)`;
+            ctx.fill();
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            // Add percentage labels inside slices
+            const labelAngle = currentAngle + sliceAngle / 2;
+            const labelX = centerX + Math.cos(labelAngle) * (radius * 0.7);
+            const labelY = centerY + Math.sin(labelAngle) * (radius * 0.7);
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            const percentage = Math.round((value / total) * 100);
+            ctx.fillText(`${percentage}%`, labelX, labelY);
+            
+            currentAngle += sliceAngle;
+        });
+        
+        // Draw legend
+        this.drawLegend(ctx, data, canvasWidth - 180, 100);
+    }
+
+    /**
+     * Draw contextual line chart with proper labels and legend
+     */
+    drawContextualLineChart(ctx, area, data, canvasWidth) {
+        const maxValue = Math.max(...data.values);
+        const minValue = Math.min(...data.values);
+        const valueRange = maxValue - minValue;
+        
+        // Draw axes
+        ctx.strokeStyle = '#666';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(area.x, area.y);
+        ctx.lineTo(area.x, area.y + area.height);
+        ctx.lineTo(area.x + area.width, area.y + area.height);
+        ctx.stroke();
+        
+        // Draw Y-axis labels
+        ctx.fillStyle = '#666';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'right';
+        for (let i = 0; i <= 5; i++) {
+            const value = minValue + (valueRange / 5) * i;
+            const y = area.y + area.height - (i / 5) * area.height;
+            const displayValue = data.currency ? 
+                `${data.currency}${value.toFixed(1)}${data.units}` : 
+                `${value.toFixed(1)}${data.units}`;
+            ctx.fillText(displayValue, area.x - 10, y + 4);
+        }
+        
+        // Draw grid lines
+        ctx.strokeStyle = '#eee';
+        ctx.lineWidth = 1;
+        for (let i = 1; i < 5; i++) {
+            const y = area.y + (area.height / 5) * i;
+            ctx.beginPath();
+            ctx.moveTo(area.x, y);
+            ctx.lineTo(area.x + area.width, y);
+            ctx.stroke();
+        }
+        
+        // Draw line with contextual data
+        ctx.strokeStyle = data.colors[0] || '#007BFF';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        
+        data.values.forEach((value, i) => {
+            const x = area.x + (i / (data.values.length - 1)) * area.width;
+            const normalizedValue = (value - minValue) / valueRange;
+            const y = area.y + area.height - normalizedValue * area.height * 0.8;
+            
+            if (i === 0) {
+                ctx.moveTo(x, y);
+            } else {
+                ctx.lineTo(x, y);
+            }
+            
+            // Draw data points
+            ctx.fillStyle = data.colors[0] || '#007BFF';
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Add data labels
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            const displayValue = data.currency ? 
+                `${data.currency}${value}${data.units}` : 
+                `${value}${data.units}`;
+            ctx.fillText(displayValue, x, y - 15);
+        });
+        ctx.stroke();
+        
+        // Draw X-axis labels
+        ctx.fillStyle = '#666';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        data.labels.forEach((label, i) => {
+            const x = area.x + (i / (data.labels.length - 1)) * area.width;
+            ctx.fillText(label, x, area.y + area.height + 20);
+        });
+        
+        // Draw legend
+        this.drawLegend(ctx, data, canvasWidth - 180, 100);
+    }
+
+    /**
+     * Draw contextual funnel chart with proper labels
+     */
+    drawContextualFunnelChart(ctx, area, data) {
+        data.labels.forEach((label, i) => {
+            const stageHeight = area.height / data.labels.length * 0.8;
+            const y = area.y + i * (area.height / data.labels.length);
+            const widthRatio = data.values[i] / Math.max(...data.values);
+            const stageWidth = area.width * widthRatio;
+            const x = area.x + (area.width - stageWidth) / 2;
+            
+            // Draw funnel stage
+            ctx.fillStyle = data.colors[i] || `hsl(${210 - i * 20}, 70%, ${60 - i * 5}%)`;
+            ctx.fillRect(x, y, stageWidth, stageHeight);
+            
+            // Add stage border
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, stageWidth, stageHeight);
+            
+            // Add stage labels
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'center';
+            const displayValue = `${label} (${data.values[i]}${data.units})`;
+            ctx.fillText(displayValue, area.x + area.width / 2, y + stageHeight / 2 + 6);
+        });
+    }
+
+    /**
+     * Draw legend for charts
+     * @param {CanvasRenderingContext2D} ctx - Canvas context
+     * @param {Object} data - Chart data
+     * @param {number} x - Legend X position
+     * @param {number} y - Legend Y position
+     */
+    drawLegend(ctx, data, x, y) {
+        const legendItemHeight = 25;
+        
+        // Draw legend background
+        const legendHeight = data.labels.length * legendItemHeight + 20;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 1;
+        ctx.fillRect(x - 10, y - 10, 150, legendHeight);
+        ctx.strokeRect(x - 10, y - 10, 150, legendHeight);
+        
+        // Draw legend title
+        ctx.fillStyle = '#333';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('Legend', x, y + 12);
+        
+        // Draw legend items
+        data.labels.forEach((label, i) => {
+            const itemY = y + 30 + i * legendItemHeight;
+            
+            // Draw color box
+            ctx.fillStyle = data.colors[i] || `hsl(${i * 72}, 70%, 50%)`;
+            ctx.fillRect(x, itemY - 8, 15, 15);
+            ctx.strokeStyle = '#666';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(x, itemY - 8, 15, 15);
+            
+            // Draw label text
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.fillText(label, x + 20, itemY + 4);
+            
+            // Draw value
+            ctx.fillStyle = '#666';
+            ctx.font = '11px Arial';
+            const value = data.currency ? 
+                `${data.currency}${data.values[i]}${data.units}` : 
+                `${data.values[i]}${data.units}`;
+            ctx.fillText(value, x + 20, itemY + 16);
+        });
     }
 
     /**
