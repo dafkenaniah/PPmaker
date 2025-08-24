@@ -37,10 +37,11 @@
     "chart-generation"
   ],
   "author": {
-    "name": "PowerPoint Generator Team",
-    "email": "support@powerpointgenerator.com"
+    "name": "Kenneth Davis",
+    "email": "Kenneth.Davis@sony.com"
   },
   "license": "MIT",
+  "copyright": "Vibe coded by Kenneth Davis",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "cross-env": "^10.0.0",
@@ -130,9 +131,10 @@
           ]
         }
       ],
-      "publisherName": "PowerPoint Generator Team",
+      "publisherName": "Kenneth Davis",
       "verifyUpdateCodeSignature": false,
-      "sign": null
+      "sign": null,
+      "requestedExecutionLevel": "asInvoker"
     },
     "mac": {
       "target": [
