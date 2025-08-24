@@ -1006,6 +1006,48 @@ Example format:
                         </div>
                     </div>
 
+                    <!-- PowerPoint Theme Selection -->
+                    <div class="config-group">
+                        <h3 class="config-group-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                            </svg>
+                            PowerPoint Theme Selection
+                        </h3>
+                        <p class="config-description">Choose a PowerPoint theme for generated presentations</p>
+                        
+                        <div class="theme-selection">
+                            <label for="powerpoint-theme-select">Presentation Theme:</label>
+                            <select id="powerpoint-theme-select" class="theme-select">
+                                <option value="default">Default (Clean)</option>
+                                <option value="corporate">Corporate Blue</option>
+                                <option value="modern">Modern Dark</option>
+                                <option value="minimal">Minimal White</option>
+                                <option value="executive">Executive Gray</option>
+                                <option value="creative">Creative Colors</option>
+                            </select>
+                            <p class="setting-description">Selected theme will be applied to all generated PowerPoint presentations</p>
+                            
+                            <div class="theme-paths-info">
+                                <details>
+                                    <summary>PowerPoint Theme Folder Locations</summary>
+                                    <div class="theme-paths">
+                                        <p><strong>System Themes:</strong></p>
+                                        <code>C:\Program Files\Microsoft Office\root\Document Themes 16\</code>
+                                        <p><strong>32-bit Office:</strong></p>
+                                        <code>C:\Program Files (x86)\Microsoft Office\root\Document Themes 16\</code>
+                                        <p><strong>User Themes:</strong></p>
+                                        <code>%USERPROFILE%\AppData\Roaming\Microsoft\Templates\Document Themes\</code>
+                                        <p class="note">Theme files have .thmx extension</p>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Advanced Settings -->
                     <div class="config-group">
                         <h3 class="config-group-title">
