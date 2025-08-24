@@ -91,6 +91,7 @@
       "electron/**/*",
       "python/**/*",
       "analytics/**/*",
+      "themes/**/*",
       "package.json",
       "!node_modules/**/*",
       "!dist/**/*",
@@ -114,6 +115,10 @@
       {
         "from": "analytics",
         "to": "analytics"
+      },
+      {
+        "from": "themes",
+        "to": "themes"
       }
     ],
     "win": {

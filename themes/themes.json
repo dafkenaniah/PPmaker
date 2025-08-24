@@ -1,0 +1,94 @@
+{
+  "themes": {
+    "default": {
+      "name": "Default (Clean)",
+      "colors": {
+        "primary": "#1F4E79",
+        "secondary": "#70AD47", 
+        "accent": "#FFC000",
+        "text": "#333333",
+        "background": "#FFFFFF"
+      },
+      "fonts": {
+        "title": "Calibri",
+        "body": "Calibri"
+      },
+      "description": "Clean, professional theme suitable for all audiences"
+    },
+    "corporate": {
+      "name": "Corporate Blue",
+      "colors": {
+        "primary": "#0F4C75",
+        "secondary": "#3282B8",
+        "accent": "#BBE1FA",
+        "text": "#1B262C",
+        "background": "#FFFFFF"
+      },
+      "fonts": {
+        "title": "Arial",
+        "body": "Arial"
+      },
+      "description": "Professional corporate theme with blue color scheme"
+    },
+    "modern": {
+      "name": "Modern Dark",
+      "colors": {
+        "primary": "#2C3E50",
+        "secondary": "#E74C3C",
+        "accent": "#F39C12",
+        "text": "#FFFFFF",
+        "background": "#34495E"
+      },
+      "fonts": {
+        "title": "Segoe UI",
+        "body": "Segoe UI"
+      },
+      "description": "Modern dark theme for contemporary presentations"
+    },
+    "minimal": {
+      "name": "Minimal White",
+      "colors": {
+        "primary": "#2C3E50",
+        "secondary": "#95A5A6",
+        "accent": "#3498DB",
+        "text": "#2C3E50",
+        "background": "#FFFFFF"
+      },
+      "fonts": {
+        "title": "Helvetica",
+        "body": "Helvetica"
+      },
+      "description": "Clean minimal design with maximum readability"
+    },
+    "executive": {
+      "name": "Executive Gray",
+      "colors": {
+        "primary": "#5D6D7E",
+        "secondary": "#85929E",
+        "accent": "#D5DBDB",
+        "text": "#2C3E50",
+        "background": "#F8F9FA"
+      },
+      "fonts": {
+        "title": "Times New Roman",
+        "body": "Arial"
+      },
+      "description": "Sophisticated theme designed for executive presentations"
+    },
+    "creative": {
+      "name": "Creative Colors",
+      "colors": {
+        "primary": "#8E44AD",
+        "secondary": "#E67E22",
+        "accent": "#1ABC9C",
+        "text": "#2C3E50",
+        "background": "#FFFFFF"
+      },
+      "fonts": {
+        "title": "Calibri",
+        "body": "Calibri"
+      },
+      "description": "Vibrant creative theme for engaging presentations"
+    }
+  }
+}
