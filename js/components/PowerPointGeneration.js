@@ -177,22 +177,18 @@ class PowerPointGeneration {
             const slideImages = chartAssignments[index] || [];
             const hasImages = slideImages.length > 0;
             
-            // Add title with theme-compatible positioning
+            // Add title with hard-coded positioning to prevent overlap
             if (slideData.title) {
                 slide.addText(slideData.title, {
-                    placeholder: 'title' // Use PowerPoint's title placeholder instead of absolute positioning
-                });
-                
-                // Fallback with safe positioning if placeholder doesn't work
-                slide.addText(slideData.title, {
-                    x: 0.5,  // Use inches instead of percentages for better theme compatibility
-                    y: 0.5,
+                    x: 0.5,
+                    y: 0.3,  // Fixed position at top
                     w: 9.0,
-                    h: 1.0,
-                    fontSize: 32,
+                    h: 1.2,
+                    fontSize: 28,
                     bold: true,
                     align: 'left',
-                    color: '333333'
+                    color: '333333',
+                    isTextBox: true
                 });
             }
             
@@ -201,42 +197,34 @@ class PowerPointGeneration {
             const contentWidth = hasImages ? '45%' : '90%';
             const contentHeight = hasImages ? '70%' : '70%';
             
-            // Add content using theme-compatible positioning
+            // Add content with hard-coded positioning to ensure proper spacing
             if (slideData.bullets && slideData.bullets.length > 0) {
-                // Try using content placeholder first
-                const bulletText = slideData.bullets.map(bullet => `• ${bullet}`).join('\n');
-                slide.addText(bulletText, {
-                    placeholder: 'content' // Use PowerPoint's content placeholder
-                });
-                
-                // Fallback with safe positioning
                 const contentWidthInches = hasImages ? 4.0 : 8.5;
+                const bulletText = slideData.bullets.map(bullet => `• ${bullet}`).join('\n');
+                
                 slide.addText(bulletText, {
-                    x: 0.75,
-                    y: 2.0,
+                    x: 0.5,
+                    y: 1.8,  // Well below title to prevent overlap
                     w: contentWidthInches,
-                    h: 5.5,
-                    fontSize: 18,
+                    h: 5.0,
+                    fontSize: 16,
                     align: 'left',
                     color: '333333',
-                    bullet: true // Enable bullet formatting
+                    isTextBox: true,
+                    bullet: { type: 'bullet' }
                 });
             } else if (slideData.content && slideData.content.length > 0) {
-                // Use content placeholder for better theme compatibility
-                slide.addText(slideData.content.join('\n'), {
-                    placeholder: 'content'
-                });
-                
-                // Fallback positioning
                 const contentWidthInches = hasImages ? 4.0 : 8.5;
+                
                 slide.addText(slideData.content.join('\n'), {
-                    x: 0.75,
-                    y: 2.0,
+                    x: 0.5,
+                    y: 1.8,  // Well below title
                     w: contentWidthInches,
-                    h: 5.5,
-                    fontSize: 18,
+                    h: 5.0,
+                    fontSize: 16,
                     align: 'left',
-                    color: '333333'
+                    color: '333333',
+                    isTextBox: true
                 });
             }
             
@@ -583,59 +571,49 @@ class PowerPointGeneration {
                 const slideImages = chartAssignments[index] || [];
                 const hasImages = slideImages.length > 0;
                 
-                // Add title with theme-compatible positioning
+                // Add title with hard-coded positioning to prevent overlap
                 if (slideData.title) {
                     slide.addText(slideData.title, {
-                        placeholder: 'title' // Use PowerPoint's title placeholder
-                    });
-                    
-                    // Fallback with theme-safe positioning
-                    slide.addText(slideData.title, {
                         x: 0.5,
-                        y: 0.5,
+                        y: 0.3,  // Fixed position at top
                         w: 9.0,
-                        h: 1.0,
-                        fontSize: 32,
+                        h: 1.2,
+                        fontSize: 28,
                         bold: true,
                         align: 'left',
-                        color: '333333'
+                        color: '333333',
+                        isTextBox: true
                     });
                 }
                 
-                // Add content using theme-compatible positioning
+                // Add content with hard-coded positioning to ensure proper spacing
                 if (slideData.bullets && slideData.bullets.length > 0) {
-                    const bulletText = slideData.bullets.map(bullet => `• ${bullet}`).join('\n');
-                    slide.addText(bulletText, {
-                        placeholder: 'content' // Use PowerPoint's content placeholder
-                    });
-                    
-                    // Fallback with theme-safe positioning
                     const contentWidthInches = hasImages ? 4.0 : 8.5;
+                    const bulletText = slideData.bullets.map(bullet => `• ${bullet}`).join('\n');
+                    
                     slide.addText(bulletText, {
-                        x: 0.75,
-                        y: 2.0,
+                        x: 0.5,
+                        y: 1.8,  // Well below title to prevent overlap
                         w: contentWidthInches,
-                        h: 5.5,
-                        fontSize: 18,
+                        h: 5.0,
+                        fontSize: 16,
                         align: 'left',
                         color: '333333',
-                        bullet: true
+                        isTextBox: true,
+                        bullet: { type: 'bullet' }
                     });
                 } else if (slideData.content && slideData.content.length > 0) {
-                    slide.addText(slideData.content.join('\n'), {
-                        placeholder: 'content'
-                    });
-                    
-                    // Fallback positioning
                     const contentWidthInches = hasImages ? 4.0 : 8.5;
+                    
                     slide.addText(slideData.content.join('\n'), {
-                        x: 0.75,
-                        y: 2.0,
+                        x: 0.5,
+                        y: 1.8,  // Well below title
                         w: contentWidthInches,
-                        h: 5.5,
-                        fontSize: 18,
+                        h: 5.0,
+                        fontSize: 16,
                         align: 'left',
-                        color: '333333'
+                        color: '333333',
+                        isTextBox: true
                     });
                 }
                 
