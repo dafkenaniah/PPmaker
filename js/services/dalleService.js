@@ -932,88 +932,88 @@ class DalleService {
     }
 
     /**
-     * Get predefined chart templates for stakeholder groups
+     * Get predefined chart templates for Sony stakeholder groups
      * @param {string} stakeholderGroup - Stakeholder group
-     * @returns {Array} - Array of chart templates
+     * @returns {Array} - Array of Sony-specific chart templates
      */
     getChartTemplatesForStakeholder(stakeholderGroup) {
         const templates = {
             'executive': [
                 {
-                    type: 'bar-chart',
-                    title: 'Revenue Growth',
-                    description: 'Quarterly revenue comparison showing growth trends',
-                    tooltip: 'Best for showing financial performance and growth metrics to executives'
+                    type: 'revenue-dashboard',
+                    title: 'Game Revenue Performance',
+                    description: 'Multi-platform revenue breakdown with forecasting',
+                    tooltip: 'Executive dashboard showing game performance across PlayStation, PC, and mobile platforms'
                 },
                 {
-                    type: 'pie-chart',
-                    title: 'Market Share',
-                    description: 'Market share distribution across competitors',
-                    tooltip: 'Ideal for showing market position and competitive landscape'
+                    type: 'market-analysis',
+                    title: 'Competitive Landscape',
+                    description: 'Market share analysis vs competitors with trend indicators',
+                    tooltip: 'Strategic view of Sony\'s position in gaming market segments'
                 },
                 {
-                    type: 'line-chart',
-                    title: 'KPI Trends',
-                    description: 'Key performance indicators over time',
-                    tooltip: 'Perfect for tracking business metrics and performance trends'
+                    type: 'portfolio-overview',
+                    title: 'Game Portfolio ROI',
+                    description: 'Return on investment across game titles and franchises',
+                    tooltip: 'Portfolio optimization insights for investment decisions'
                 },
                 {
-                    type: 'funnel',
-                    title: 'Sales Funnel',
-                    description: 'Sales conversion stages and drop-off rates',
-                    tooltip: 'Essential for understanding sales process efficiency'
+                    type: 'player-metrics',
+                    title: 'Player Engagement Analytics',
+                    description: 'Cross-platform player engagement and retention metrics',
+                    tooltip: 'Strategic player base analysis for business planning'
                 }
             ],
             'development': [
                 {
-                    type: 'line-chart',
-                    title: 'Code Quality Metrics',
-                    description: 'Bug count, test coverage, and code complexity over time',
-                    tooltip: 'Track code quality improvements and technical debt'
+                    type: 'technical-debt',
+                    title: 'Technical Debt Analysis',
+                    description: 'Code quality metrics, refactoring priorities, and architectural health',
+                    tooltip: 'Development team insights for maintaining high-quality game codebases'
                 },
                 {
-                    type: 'bar-chart',
-                    title: 'Sprint Velocity',
-                    description: 'Story points completed per sprint',
-                    tooltip: 'Monitor team productivity and sprint planning accuracy'
+                    type: 'build-pipeline',
+                    title: 'Build & Deployment Pipeline',
+                    description: 'CI/CD performance, build times, and deployment success rates',
+                    tooltip: 'DevOps efficiency metrics for game development workflows'
                 },
                 {
-                    type: 'stacked-bar',
-                    title: 'Feature Development',
-                    description: 'Development time breakdown by feature category',
-                    tooltip: 'Analyze development effort distribution across features'
+                    type: 'performance-profiling',
+                    title: 'Game Performance Profiling',
+                    description: 'Frame rates, load times, and optimization impact across platforms',
+                    tooltip: 'Technical performance analysis for PlayStation, PC, and mobile optimization'
                 },
                 {
-                    type: 'heatmap',
-                    title: 'System Performance',
-                    description: 'Server response times and system load patterns',
-                    tooltip: 'Visualize system performance bottlenecks and patterns'
+                    type: 'feature-completion',
+                    title: 'Feature Development Progress',
+                    description: 'Sprint velocity, story completion, and milestone tracking',
+                    tooltip: 'Agile development progress for game feature delivery'
                 }
             ],
             'product': [
                 {
-                    type: 'funnel',
-                    title: 'User Conversion',
-                    description: 'User journey from signup to activation',
-                    tooltip: 'Identify conversion bottlenecks in user onboarding'
+                    type: 'player-journey',
+                    title: 'Player Journey Analytics',
+                    description: 'Player onboarding, engagement milestones, and retention analysis',
+                    tooltip: 'Game UX optimization insights for player experience improvement'
                 },
                 {
-                    type: 'line-chart',
-                    title: 'User Engagement',
-                    description: 'Daily/monthly active users and retention rates',
-                    tooltip: 'Track user engagement and product stickiness'
+                    type: 'monetization-funnel',
+                    title: 'Game Monetization Funnel',
+                    description: 'Free-to-play conversion, DLC adoption, and revenue per user',
+                    tooltip: 'Product strategy metrics for game monetization optimization'
                 },
                 {
-                    type: 'bar-chart',
-                    title: 'Feature Usage',
-                    description: 'Most and least used product features',
-                    tooltip: 'Understand feature adoption and prioritize development'
+                    type: 'feature-adoption',
+                    title: 'Game Feature Adoption',
+                    description: 'New feature usage, player preferences, and content engagement',
+                    tooltip: 'Product analytics for game feature prioritization and roadmap planning'
                 },
                 {
-                    type: 'area-chart',
-                    title: 'User Feedback',
-                    description: 'Customer satisfaction scores and feedback trends',
-                    tooltip: 'Monitor user satisfaction and product-market fit'
+                    type: 'competitive-analysis',
+                    title: 'Competitive Game Analysis',
+                    description: 'Feature comparison, market positioning, and differentiation opportunities',
+                    tooltip: 'Strategic product insights for competitive advantage in gaming market'
                 }
             ],
             'marketing': [
