@@ -1,18 +1,19 @@
 {
   "name": "powerpoint-generator",
-  "version": "1.0.0",
-  "description": "AI-Powered PowerPoint Generator with audience targeting and file update capabilities",
+  "version": "2.0.0",
+  "description": "AI-Powered PowerPoint Generator v2.0 with enhanced meeting data preservation, bulletized topic extraction, and latest AI models for efficient status updates",
   "main": "electron/main.js",
   "homepage": "./",
   "scripts": {
     "start": "electron .",
     "dev": "concurrently \"npm run start-python\" \"npm run serve\" \"wait-on http://localhost:3001 && cross-env NODE_ENV=development electron .\"",
     "serve": "http-server . -p 3001 -c-1",
-    "build": "electron-builder",
-    "build-win": "electron-builder --win",
-    "build-mac": "electron-builder --mac",
-    "build-linux": "electron-builder --linux",
-    "pack": "electron-builder --dir",
+    "build": "npm run build-python-exe && electron-builder",
+    "build-win": "npm run build-python-exe && electron-builder --win",
+    "build-mac": "npm run build-python-exe && electron-builder --mac",
+    "build-linux": "npm run build-python-exe && electron-builder --linux",
+    "build-python-exe": "cd python && python build_executable.py",
+    "pack": "npm run build-python-exe && electron-builder --dir",
     "dist": "npm run build",
     "dist-complete": "npm run build-win && npm run package-complete",
     "package-complete": "powershell -Command \"if (Test-Path 'PowerPoint-Generator-Complete') { Remove-Item -Recurse -Force 'PowerPoint-Generator-Complete' -ErrorAction SilentlyContinue }; mkdir 'PowerPoint-Generator-Complete'; Copy-Item -Recurse 'dist/win-unpacked/*' 'PowerPoint-Generator-Complete/'; Copy-Item -Recurse 'python' 'PowerPoint-Generator-Complete/'; Copy-Item -Recurse 'analytics' 'PowerPoint-Generator-Complete/'\"",
@@ -20,7 +21,7 @@
     "start-python": "cd python && python main.py",
     "start-analytics": "cd analytics && node server.js",
     "start-all": "concurrently \"npm run start-python\" \"npm run start-analytics\" \"npm start\"",
-    "clean": "rimraf dist node_modules/.cache",
+    "clean": "rimraf dist node_modules/.cache python/dist python/build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -37,11 +38,10 @@
     "chart-generation"
   ],
   "author": {
-    "name": "Kenneth Davis",
-    "email": "Kenneth.Davis@sony.com"
+    "name": "PowerPoint Generator Team",
+    "email": "support@powerpointgenerator.com"
   },
   "license": "MIT",
-  "copyright": "Vibe coded by Kenneth Davis",
   "devDependencies": {
     "concurrently": "^8.2.2",
     "cross-env": "^10.0.0",
@@ -82,6 +82,7 @@
       "js/components/OutlinePreview.js",
       "js/components/PowerPointGeneration.js",
       "js/components/TabManager.js",
+      "js/components/TimeSavingsDashboard.js",
       "js/services/aiService.js",
       "js/services/dalleService.js",
       "js/services/fileService.js",
@@ -92,7 +93,6 @@
       "electron/**/*",
       "python/**/*",
       "analytics/**/*",
-      "themes/**/*",
       "package.json",
       "!node_modules/**/*",
       "!dist/**/*",
@@ -116,10 +116,6 @@
       {
         "from": "analytics",
         "to": "analytics"
-      },
-      {
-        "from": "themes",
-        "to": "themes"
       }
     ],
     "win": {
@@ -131,10 +127,9 @@
           ]
         }
       ],
-      "publisherName": "Kenneth Davis",
+      "publisherName": "PowerPoint Generator Team",
       "verifyUpdateCodeSignature": false,
-      "sign": null,
-      "requestedExecutionLevel": "asInvoker"
+      "sign": null
     },
     "mac": {
       "target": [

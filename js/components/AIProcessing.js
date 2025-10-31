@@ -580,59 +580,83 @@ Focus on:
     }
 
     /**
-     * Build AI prompt for real AI gateway
+     * Build AI prompt for real AI gateway - Optimized for v2.0
      * @param {string} notes - User notes
      * @returns {string} Complete prompt
      */
     buildAIPrompt(notes) {
-        let prompt = `You are a presentation expert. Convert these notes into a structured PowerPoint outline.
-
-Return a JSON object with this exact structure:
-{
-  "slides": [
-    {
-      "slideNumber": 1,
-      "title": "Slide Title",
-      "content": ["Main content points"],
-      "bullets": ["Bullet point 1", "Bullet point 2"],
-      "presenterNotes": "Speaker notes",
-      "slideType": "title|content|conclusion"
-    }
-  ],
-  "totalSlides": number,
-  "estimatedDuration": "X minutes"
-}
-
-Focus on:
-- Clear, concise slide titles
-- Logical flow and organization  
-- Appropriate bullet point breakdown
-- Professional presentation structure
-- Maximum 10 slides for optimal presentation length`;
+        // Detect if this is meeting content for specialized processing
+        const isMeetingContent = this.detectMeetingContent(notes);
+        
+        let prompt;
+        
+        if (isMeetingContent) {
+            // Use specialized meeting analysis prompt for bulletized topics
+            prompt = CONFIG.PROMPTS.MEETING_ANALYSIS.replace('{MEETING_CONTENT}', notes);
+        } else {
+            // Use enhanced slide outline prompt for general content
+            prompt = CONFIG.PROMPTS.SLIDE_OUTLINE.replace('{USER_NOTES}', notes);
+        }
 
         // Add audience context if available
         if (window.audienceManager && typeof window.audienceManager.generatePromptModifier === 'function') {
             const audienceModifier = window.audienceManager.generatePromptModifier();
             if (audienceModifier) {
-                prompt += audienceModifier;
+                prompt += '\n\nAUDIENCE CONTEXT:' + audienceModifier;
             }
         }
 
-        // Add configuration context
+        // Add configuration context for model-specific instructions
         if (window.configurationManager && typeof window.configurationManager.getCurrentModelInfo === 'function') {
             const modelInfo = window.configurationManager.getCurrentModelInfo();
             if (modelInfo) {
-                prompt += `\n\nNote: You are ${modelInfo.name} by ${modelInfo.provider}. Use your strengths in ${modelInfo.quality.toLowerCase()} quality responses.`;
+                prompt += `\n\nMODEL INSTRUCTIONS: You are ${modelInfo.name} by ${modelInfo.provider}. Leverage your strengths in ${modelInfo.quality.toLowerCase()} analysis and ensure all important topics are clearly bulletized.`;
             }
         }
 
-        prompt += `
-
-Notes to convert: ${notes}
-
-Please generate a comprehensive slide outline based on these notes.`;
-
         return prompt;
+    }
+
+    /**
+     * Detect if content appears to be meeting-related for specialized processing
+     * @param {string} content - Content to analyze
+     * @returns {boolean} True if content appears to be meeting-related
+     */
+    detectMeetingContent(content) {
+        if (!content || content.length < 50) return false;
+        
+        // Meeting indicators
+        const meetingPatterns = [
+            /\[\d{1,2}:\d{2}\]/i,           // Timestamps [10:30]
+            /\d{1,2}:\d{2}\s*(AM|PM)/i,     // Time stamps 10:30 AM
+            /meeting|agenda|action items?/i, // Meeting words
+            /attendees?|participants?/i,     // Participant references
+            /discussed?|decided?|agreed?/i,  // Meeting verbs
+            /status update|standup|scrum/i,  // Meeting types
+            /next steps?|follow[- ]?up/i,    // Action-oriented phrases
+            /team|project|sprint|milestone/i // Work-related terms
+        ];
+        
+        // Speaker patterns
+        const speakerPatterns = [
+            /^\w+\s*:\s*/m,                 // Name: at start of line
+            /^\[\d{2}:\d{2}\]\s*\w+:/m,     // [10:30] Name:
+            /^\w+\s+\d{1,2}:\d{2}/m         // Name 10:30
+        ];
+        
+        // Check for meeting patterns
+        const hasMeetingPatterns = meetingPatterns.some(pattern => pattern.test(content));
+        
+        // Check for speaker patterns
+        const hasSpeakerPatterns = speakerPatterns.some(pattern => pattern.test(content));
+        
+        // Check for multiple speakers (indicates conversation)
+        const speakerMatches = content.match(/^\w+\s*:/gm) || [];
+        const uniqueSpeakers = new Set(speakerMatches.map(match => match.replace(':', '').trim()));
+        const hasMultipleSpeakers = uniqueSpeakers.size >= 2;
+        
+        // Return true if content has meeting characteristics
+        return hasMeetingPatterns || (hasSpeakerPatterns && hasMultipleSpeakers);
     }
 
     /**

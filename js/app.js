@@ -87,6 +87,7 @@ class PowerPointGeneratorApp {
             this.components.audienceManager = window.audienceManager || (typeof audienceManager !== 'undefined' ? audienceManager : null);
             this.components.configurationManager = window.configurationManager || (typeof configurationManager !== 'undefined' ? configurationManager : null);
             this.components.meetingProcessor = window.meetingProcessor || (typeof meetingProcessor !== 'undefined' ? meetingProcessor : null);
+            this.components.timeSavingsDashboard = window.timeSavingsDashboard || (typeof timeSavingsDashboard !== 'undefined' ? timeSavingsDashboard : null);
             
             // Initialize services
             this.components.aiService = window.aiService || (typeof aiService !== 'undefined' ? aiService : null);

@@ -2,7 +2,7 @@
 class TabManager {
     constructor() {
         this.currentTab = 'create-new';
-        this.tabs = ['create-new', 'meeting', 'update', 'charts', 'audience', 'config'];
+        this.tabs = ['create-new', 'meeting', 'update', 'charts', 'dashboard', 'audience', 'config'];
         this.isInitialized = false;
         
         console.log('TabManager constructor called');

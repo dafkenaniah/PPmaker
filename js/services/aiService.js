@@ -37,15 +37,53 @@ class AIService {
                 temperature: this.temperature
             });
 
-            // Parse the AI response to extract JSON
+            // Parse the AI response to extract JSON - Enhanced for v2.0
             const content = response.choices[0].message.content;
-            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            console.log('AI Response Content:', content);
             
-            if (!jsonMatch) {
-                throw new Error('Invalid AI response format');
+            // Try multiple parsing strategies for latest models
+            let slideOutline;
+            
+            // Strategy 1: Look for JSON within code blocks
+            let jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/);
+            if (jsonMatch) {
+                try {
+                    slideOutline = JSON.parse(jsonMatch[1]);
+                } catch (e) {
+                    console.warn('Failed to parse JSON from code block:', e);
+                }
             }
-
-            const slideOutline = JSON.parse(jsonMatch[0]);
+            
+            // Strategy 2: Look for any JSON object
+            if (!slideOutline) {
+                jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                    try {
+                        slideOutline = JSON.parse(jsonMatch[0]);
+                    } catch (e) {
+                        console.warn('Failed to parse JSON object:', e);
+                    }
+                }
+            }
+            
+            // Strategy 3: Try parsing the entire response as JSON
+            if (!slideOutline) {
+                try {
+                    slideOutline = JSON.parse(content.trim());
+                } catch (e) {
+                    console.warn('Failed to parse entire content as JSON:', e);
+                }
+            }
+            
+            if (!slideOutline) {
+                console.error('Could not extract JSON from AI response. Full content:', content);
+                console.error('Content length:', content.length);
+                console.error('First 500 chars:', content.substring(0, 500));
+                console.error('Last 500 chars:', content.substring(Math.max(0, content.length - 500)));
+                throw new Error('Invalid AI response format - no valid JSON found');
+            }
+            
+            console.log('Successfully parsed JSON outline:', slideOutline);
             
             // Validate the response structure
             this.validateSlideOutline(slideOutline);
@@ -326,7 +364,11 @@ Generate an improved outline that addresses the user's instructions while enhanc
             }
 
             // Adapt payload for different gateway types
-            let requestBody = payload;
+            let requestBody = { ...payload };
+            
+            // Handle latest model parameter requirements
+            const model = payload.model || this.currentConfig.model;
+            const isLatestModel = this.isLatestModel(model);
             
             if (gatewayConfig.endpoint.includes('generateContent')) {
                 // Gemini direct format
@@ -342,14 +384,28 @@ Generate an improved outline that addresses the user's instructions while enhanc
                     }
                 };
             } else if (gatewayConfig.endpoint.includes('/v1/messages')) {
-                // Anthropic direct format
+                // Anthropic direct format  
                 requestBody = {
-                    model: payload.model || this.currentConfig.model,
+                    model: model,
                     max_tokens: payload.max_tokens || this.currentConfig.maxTokens,
                     messages: payload.messages
                 };
+            } else {
+                // OpenAI format - handle latest model parameter differences
+                if (isLatestModel) {
+                    // Use max_completion_tokens for latest models (GPT-5, o1, etc.)
+                    requestBody.max_completion_tokens = payload.max_tokens || this.currentConfig.maxTokens;
+                    delete requestBody.max_tokens;
+                    
+                    // Latest models only support default temperature (1) - remove custom temperature
+                    delete requestBody.temperature;
+                } else {
+                    // Use max_tokens for older models
+                    requestBody.max_tokens = payload.max_tokens || this.currentConfig.maxTokens;
+                    // Keep custom temperature for older models
+                    requestBody.temperature = payload.temperature || this.currentConfig.temperature;
+                }
             }
-            // OpenAI format is used as-is for OpenAI and OpenAI-compatible endpoints
 
             if (window.logger) {
                 window.logger.log('debug', `[AI_SERVICE] ${requestId} - Request details`, {
@@ -676,6 +732,26 @@ Generate an improved outline that addresses the user's instructions while enhanc
      */
     exceedsTokenLimit(text) {
         return this.estimateTokens(text) > this.maxTokens;
+    }
+
+    /**
+     * Check if model is one of the latest that requires max_completion_tokens
+     * @param {string} model - Model to check
+     * @returns {boolean} - Whether model requires max_completion_tokens
+     */
+    isLatestModel(model) {
+        // Latest models that require max_completion_tokens instead of max_tokens
+        const latestModels = [
+            'gpt-5',
+            'gpt-5-codex', 
+            'gpt-5-mini',
+            'gpt-5-nano',
+            'gpt-4.1',
+            'o1',
+            'o1-mini'
+        ];
+        
+        return latestModels.includes(model);
     }
 }
 

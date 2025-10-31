@@ -11,45 +11,46 @@ class ConfigurationManager {
         this.defaultConfig = { ...this.currentConfig };
         this.availableGateways = CONFIG.AI_GATEWAY.GATEWAYS;
         this.availableModels = {
-            'gpt-4.1': {
-                name: 'GPT-4.1',
+            // OpenAI Models - Latest v2.0
+            'gpt-5': {
+                name: 'GPT-5',
                 provider: 'OpenAI',
-                contextLength: 128000,
+                contextLength: 200000,
                 speed: 'Fast',
                 quality: 'Excellent',
                 badge: 'recommended'
             },
-            'gpt-4.1-mini': {
-                name: 'GPT-4.1 Mini',
+            'gpt-5-codex': {
+                name: 'GPT-5 Codex',
                 provider: 'OpenAI',
-                contextLength: 128000,
-                speed: 'Very Fast',
-                quality: 'Good',
-                badge: 'fast'
-            },
-            'gpt-4.1-nano': {
-                name: 'GPT-4.1 Nano',
-                provider: 'OpenAI',
-                contextLength: 128000,
-                speed: 'Very Fast',
-                quality: 'Good',
-                badge: 'fast'
-            },
-            'o3': {
-                name: 'o3',
-                provider: 'OpenAI',
-                contextLength: 128000,
-                speed: 'Medium',
-                quality: 'Excellent',
-                badge: 'reasoning'
-            },
-            'o4-mini': {
-                name: 'o4 Mini',
-                provider: 'OpenAI',
-                contextLength: 128000,
+                contextLength: 200000,
                 speed: 'Fast',
-                quality: 'Very Good',
-                badge: 'reasoning'
+                quality: 'Excellent',
+                badge: 'coding'
+            },
+            'gpt-5-mini': {
+                name: 'GPT-5 Mini',
+                provider: 'OpenAI',
+                contextLength: 200000,
+                speed: 'Very Fast',
+                quality: 'Good',
+                badge: 'fast'
+            },
+            'gpt-5-nano': {
+                name: 'GPT-5 Nano',
+                provider: 'OpenAI',
+                contextLength: 200000,
+                speed: 'Very Fast',
+                quality: 'Good',
+                badge: 'fast'
+            },
+            'gpt-4.1': {
+                name: 'GPT-4.1',
+                provider: 'OpenAI',
+                contextLength: 1000000,
+                speed: 'Fast',
+                quality: 'Excellent',
+                badge: 'balanced'
             },
             'gpt-4o': {
                 name: 'GPT-4o',
@@ -71,7 +72,7 @@ class ConfigurationManager {
                 name: 'o1',
                 provider: 'OpenAI',
                 contextLength: 128000,
-                speed: 'Medium',
+                speed: 'Slow',
                 quality: 'Excellent',
                 badge: 'reasoning'
             },
@@ -79,26 +80,38 @@ class ConfigurationManager {
                 name: 'o1 Mini',
                 provider: 'OpenAI',
                 contextLength: 128000,
-                speed: 'Fast',
+                speed: 'Medium',
                 quality: 'Very Good',
                 badge: 'reasoning'
             },
-            'claude-opus-4-20250514': {
-                name: 'Claude Opus 4',
+            
+            // Anthropic Models - Latest v2.0
+            'claude-sonnet-4-5-20250929': {
+                name: 'Claude Sonnet 4.5',
+                provider: 'Anthropic',
+                contextLength: 200000,
+                speed: 'Fast',
+                quality: 'Excellent',
+                badge: 'recommended'
+            },
+            'claude-opus-4-1-20250805': {
+                name: 'Claude Opus 4.1',
                 provider: 'Anthropic',
                 contextLength: 200000,
                 speed: 'Medium',
                 quality: 'Excellent',
                 badge: 'premium'
             },
-            'claude-sonnet-4-20250514': {
-                name: 'Claude Sonnet 4',
+            'claude-3-5-haiku-20241022': {
+                name: 'Claude Haiku 3.5',
                 provider: 'Anthropic',
                 contextLength: 200000,
-                speed: 'Fast',
-                quality: 'Very Good',
-                badge: 'balanced'
+                speed: 'Very Fast',
+                quality: 'Good',
+                badge: 'fast'
             },
+            
+            // Google Models - Latest v2.0
             'gemini-2.5-pro': {
                 name: 'Gemini 2.5 Pro',
                 provider: 'Google',

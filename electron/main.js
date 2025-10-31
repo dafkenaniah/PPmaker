@@ -1,6 +1,7 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
 
 // Optional auto-updater (may not be available in packaged app)
 let autoUpdater = null;
@@ -58,6 +59,7 @@ try {
 // Keep a global reference of the window object
 let mainWindow;
 let splashWindow;
+let pythonServerProcess = null;
 
 // Enable live reload for development
 if (process.env.NODE_ENV === 'development') {
@@ -209,6 +211,147 @@ function getAppIcon() {
 function saveWindowBounds() {
     if (mainWindow && !mainWindow.isDestroyed()) {
         store.set('windowBounds', mainWindow.getBounds());
+    }
+}
+
+/**
+ * Get the path to the Python server executable
+ * @returns {string} Path to the Python server
+ */
+function getPythonServerPath() {
+    const isDev = process.env.NODE_ENV === 'development';
+    
+    if (isDev) {
+        // In development, use Python script directly
+        return path.join(__dirname, '..', 'python', 'main.py');
+    } else {
+        // In production, use bundled executable
+        const executableName = process.platform === 'win32' ? 'powerpoint-server.exe' : 'powerpoint-server';
+        
+        // Try different possible locations for the bundled executable
+        const possiblePaths = [
+            path.join(process.resourcesPath, 'python', 'dist', executableName),
+            path.join(__dirname, '..', 'python', 'dist', executableName),
+            path.join(__dirname, '..', 'resources', 'python', executableName)
+        ];
+        
+        for (const execPath of possiblePaths) {
+            if (fs.existsSync(execPath)) {
+                console.log(`Found Python server at: ${execPath}`);
+                return execPath;
+            }
+        }
+        
+        console.error('Could not find bundled Python server executable');
+        console.log('Searched paths:', possiblePaths);
+        
+        // Fallback to development path
+        return path.join(__dirname, '..', 'python', 'main.py');
+    }
+}
+
+/**
+ * Start the Python server process
+ * @returns {Promise<boolean>} Success status
+ */
+function startPythonServer() {
+    return new Promise((resolve, reject) => {
+        const isDev = process.env.NODE_ENV === 'development';
+        const serverPath = getPythonServerPath();
+        
+        console.log(`Starting Python server from: ${serverPath}`);
+        console.log(`Development mode: ${isDev}`);
+        
+        try {
+            let pythonArgs = [];
+            let executablePath = '';
+            
+            if (isDev) {
+                // In development, run with Python interpreter
+                executablePath = 'python';
+                pythonArgs = [serverPath];
+            } else {
+                // In production, run the bundled executable directly
+                executablePath = serverPath;
+                pythonArgs = [];
+            }
+            
+            console.log(`Executing: ${executablePath} ${pythonArgs.join(' ')}`);
+            
+            // Start the Python server
+            pythonServerProcess = spawn(executablePath, pythonArgs, {
+                cwd: isDev ? path.join(__dirname, '..', 'python') : path.dirname(serverPath),
+                stdio: ['pipe', 'pipe', 'pipe'],
+                env: { ...process.env, PYTHONUNBUFFERED: '1' }
+            });
+            
+            // Handle process events
+            pythonServerProcess.stdout.on('data', (data) => {
+                console.log(`Python Server: ${data.toString().trim()}`);
+            });
+            
+            pythonServerProcess.stderr.on('data', (data) => {
+                console.error(`Python Server Error: ${data.toString().trim()}`);
+            });
+            
+            pythonServerProcess.on('error', (error) => {
+                console.error('Failed to start Python server:', error);
+                pythonServerProcess = null;
+                reject(error);
+            });
+            
+            pythonServerProcess.on('close', (code, signal) => {
+                console.log(`Python server process closed with code ${code} and signal ${signal}`);
+                pythonServerProcess = null;
+            });
+            
+            // Test if server is responsive after a delay
+            setTimeout(async () => {
+                try {
+                    const response = await fetch('http://127.0.0.1:5001/status');
+                    if (response.ok) {
+                        console.log('✓ Python server is running and responsive');
+                        resolve(true);
+                    } else {
+                        console.error('Python server started but not responding correctly');
+                        resolve(false);
+                    }
+                } catch (error) {
+                    console.error('Python server not responsive:', error.message);
+                    resolve(false);
+                }
+            }, 3000);
+            
+        } catch (error) {
+            console.error('Error starting Python server:', error);
+            reject(error);
+        }
+    });
+}
+
+/**
+ * Stop the Python server process
+ */
+function stopPythonServer() {
+    if (pythonServerProcess) {
+        console.log('Stopping Python server...');
+        
+        try {
+            pythonServerProcess.kill('SIGTERM');
+            
+            // Force kill after 5 seconds if not terminated
+            setTimeout(() => {
+                if (pythonServerProcess && !pythonServerProcess.killed) {
+                    console.log('Force killing Python server...');
+                    pythonServerProcess.kill('SIGKILL');
+                }
+            }, 5000);
+            
+        } catch (error) {
+            console.error('Error stopping Python server:', error);
+        }
+        
+        pythonServerProcess = null;
     }
 }
 
@@ -645,9 +788,19 @@ function setupIPC() {
 }
 
 // App event handlers
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     // Create splash screen first
     createSplashWindow();
+    
+    // Start Python server in the background
+    console.log('Starting Python server...');
+    try {
+        await startPythonServer();
+        console.log('✓ Python server started successfully');
+    } catch (error) {
+        console.error('✗ Failed to start Python server:', error);
+        // Continue anyway - the app can still function without PowerPoint generation
+    }
     
     // Create main window after a short delay
     setTimeout(() => {
@@ -666,6 +819,9 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+    // Stop Python server before quitting
+    stopPythonServer();
+    
     // On macOS, keep app running even when all windows are closed
     if (process.platform !== 'darwin') {
         app.quit();
@@ -675,6 +831,17 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
     // Save any pending data before quitting
     saveWindowBounds();
+    
+    // Stop Python server
+    stopPythonServer();
+});
+
+app.on('will-quit', (event) => {
+    // Ensure Python server is stopped before app quits
+    if (pythonServerProcess) {
+        console.log('Ensuring Python server is stopped before quit...');
+        stopPythonServer();
+    }
 });
 
 // Security: Prevent new window creation

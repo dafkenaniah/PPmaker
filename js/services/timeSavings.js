@@ -10,9 +10,7 @@ class TimeSavingsService {
             'generate_chart': 15, // Manual: 15 min to create charts manually
             'generate_visual': 10, // Manual: 10 min to create/find visuals
             'meeting_processing': 35, // Manual: 35 min to convert meeting notes to slides
-            'content_enhancement': 20, // Manual: 20 min to enhance content quality
-            'theme_application': 10, // Manual: 10 min to apply and adjust PowerPoint themes
-            'excel_analysis': 30 // Manual: 30 min to analyze Excel data and create charts
+            'content_enhancement': 20 // Manual: 20 min to enhance content quality
         };
 
         this.automatedEstimates = {
@@ -23,9 +21,7 @@ class TimeSavingsService {
             'generate_chart': 2, // Automated: 2 min to generate charts
             'generate_visual': 1, // Automated: 1 min with DALL-E
             'meeting_processing': 3, // Automated: 3 min to process meeting
-            'content_enhancement': 1, // Automated: 1 min to enhance
-            'theme_application': 0, // Automated: 0 min - automatic theme application
-            'excel_analysis': 2 // Automated: 2 min for AI Excel analysis
+            'content_enhancement': 1 // Automated: 1 min to enhance
         };
 
         this.actionDescriptions = {
@@ -36,9 +32,7 @@ class TimeSavingsService {
             'generate_chart': 'Creating charts and visual elements',
             'generate_visual': 'Generating custom visuals with AI',
             'meeting_processing': 'Converting meeting notes to presentation',
-            'content_enhancement': 'Enhancing content quality and structure',
-            'theme_application': 'Applying PowerPoint themes and formatting',
-            'excel_analysis': 'AI analysis of Excel data for chart recommendations'
+            'content_enhancement': 'Enhancing content quality and structure'
         };
 
         this.loadSavedData();

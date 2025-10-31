@@ -580,69 +580,40 @@ Excellent! Looks like we're well-coordinated and on track. Let's reconvene tomor
     }
 
     /**
-     * Build specialized prompt for meeting content
+     * Build specialized prompt for meeting content - v2.0 Optimized
      * @returns {string} Complete prompt
      */
     buildMeetingPrompt() {
-        let prompt = `You are an expert presentation designer specializing in converting meeting content into structured PowerPoint presentations.
+        // Use the optimized meeting analysis prompt from CONFIG
+        let prompt = CONFIG.PROMPTS.MEETING_ANALYSIS.replace('{MEETING_CONTENT}', this.meetingContent);
 
-Your task is to analyze the following ${this.currentMeetingType} content and create a comprehensive presentation outline.
-
-CONTENT TYPE: ${this.getMeetingTypeDescription()}
+        // Add meeting context information
+        const contextInfo = `
+MEETING TYPE: ${this.getMeetingTypeDescription()}
 MEETING CONTEXT: ${this.meetingContext.type}
 ${this.meetingContext.duration ? `DURATION: ${this.meetingContext.duration}` : ''}
 ${this.meetingContext.participants ? `PARTICIPANTS: ${this.meetingContext.participants}` : ''}
 
-PROCESSING INSTRUCTIONS:
-${this.getProcessingInstructions()}
+PROCESSING OPTIONS: ${this.getProcessingInstructions()}`;
 
-Return a JSON object with this exact structure:
-{
-  "slides": [
-    {
-      "slideNumber": 1,
-      "title": "Slide Title",
-      "content": ["Main content points"],
-      "bullets": ["Bullet point 1", "Bullet point 2"],
-      "presenterNotes": "Speaker notes with context",
-      "slideType": "title|agenda|content|decisions|actions|conclusion",
-      "speakers": ["Speaker names if relevant"],
-      "timestamp": "Time reference if available"
-    }
-  ],
-  "totalSlides": number,
-  "estimatedDuration": "X minutes",
-  "meetingSummary": "Brief summary of the meeting",
-  "keyDecisions": ["Decision 1", "Decision 2"],
-  "actionItems": ["Action 1", "Action 2"],
-  "participants": ["Participant names"]
-}
-
-FOCUS ON:
-- Clear, professional slide titles
-- Logical flow from meeting discussion
-- Key decisions and outcomes
-- Action items and next steps
-- Proper attribution to speakers
-- Context for stakeholders who weren't present`;
+        // Insert context before the meeting content
+        prompt = prompt.replace('Meeting Content: {MEETING_CONTENT}', `${contextInfo}\n\nMeeting Content: ${this.meetingContent}`);
 
         // Add audience context if available
-        if (window.audienceManager) {
+        if (window.audienceManager && typeof window.audienceManager.generatePromptModifier === 'function') {
             const audienceModifier = window.audienceManager.generatePromptModifier();
             if (audienceModifier) {
-                prompt += audienceModifier;
+                prompt += '\n\nAUDIENCE CONTEXT:' + audienceModifier;
             }
         }
 
-        // Add model-specific context
-        if (window.configurationManager) {
+        // Add model-specific context for better performance
+        if (window.configurationManager && typeof window.configurationManager.getCurrentModelInfo === 'function') {
             const modelInfo = window.configurationManager.getCurrentModelInfo();
             if (modelInfo) {
-                prompt += `\n\nNote: You are ${modelInfo.name} by ${modelInfo.provider}. Use your strengths in analyzing conversational content and creating structured presentations.`;
+                prompt += `\n\nMODEL INSTRUCTIONS: You are ${modelInfo.name} by ${modelInfo.provider}. Use your expertise in meeting analysis and ensure ALL important topics are bulletized with • symbols for easy scanning and future reference.`;
             }
         }
-
-        prompt += `\n\nMEETING CONTENT TO ANALYZE:\n${this.meetingContent}`;
 
         return prompt;
     }
